@@ -103,7 +103,7 @@ end
 
 ## Слои системы
 
-### Слой 1 — LLM (локальный, без изменений)
+### Слой 1 — LLM (локальный)
 
 | Параметр | Значение |
 |----------|---------|
@@ -113,29 +113,22 @@ end
 | Temperature агент | 0.3 |
 | Temperature координатор | 0.2 |
 
-### Слой 2 — Swarm Coordinator (без изменений)
+### Слой 2 — Swarm Coordinator
 
 - Python asyncio, цикл: **5 сек**
 - Публикует: `swarm/world_state`
 - Получает: `swarm/events`
 
-### Слой 3 — Robot Agents ×N (без изменений)
+### Слой 3 — Robot Agents ×N
 
 - Один процесс = один агент = один робот
 - Цикл решений: **1 сек**
 - Подписка: `robot/{id}/state`, `swarm/world_state`
 - Публикация: `robot/{id}/cmd`
 
-### Слой 4 — Transport Layer (упрощён)
+### Слой 4 — Transport Layer
 
-**Единый протокол — Zenoh везде:**
-
-| Канал | Было (v3.0) | Стало (v3.1) |
-|-------|-------------|--------------|
-| Сервисы | Zenoh | Zenoh |
-| Управление движением | UDP socket | Zenoh (Priority::RealTime) |
-| Брокер | Mosquitto → Zenoh Router | Zenoh Router |
-| ESP32 транспорт | UDP socket recv | zenoh-pico subscriber |
+**Единый протокол — Zenoh везде.**
 
 **Zenoh QoS для motion команд:**
 ```
@@ -165,16 +158,15 @@ Priority::RealTime + CongestionControl::Drop
 
 ## Стек и зависимости
 
-| Компонент | Технология | Изменение от v3.0 |
-|-----------|-----------|-------------------|
-| Python агенты | eclipse-zenoh | без изменений |
-| Zenoh Router | zenohd binary | без изменений |
-| LLM runtime | Ollama + Phi-3 Mini | без изменений |
-| Dashboard | FastAPI + WebSocket | без изменений |
-| Симулятор | Webots R2023b+ | без изменений |
-| **ESP32 runtime** | **C/ESP-IDF** | ~~MicroPython~~ |
-| **ESP32 транспорт** | **zenoh-pico (idf component)** | ~~UDP socket~~ |
-| ~~Robot Gateway~~ | ~~убран~~ | ~~Zenoh→UDP мост~~ |
+| Компонент | Технология |
+|-----------|-----------|
+| Python агенты | eclipse-zenoh |
+| Zenoh Router | zenohd binary |
+| LLM runtime | Ollama + Phi-3 Mini |
+| Dashboard | FastAPI + WebSocket |
+| Симулятор | Webots R2023b+ |
+| ESP32 runtime | C/ESP-IDF |
+| ESP32 транспорт | zenoh-pico (idf component) |
 
 ---
 

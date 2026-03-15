@@ -153,8 +153,6 @@ python swarm_coordinator.py
 uvicorn dashboard:app --port 8000
 ```
 
-Убран: терминал Robot Gateway (компонент не нужен).
-
 ## Полнота разделов
 
 | Раздел | Готовность | Блокер |
