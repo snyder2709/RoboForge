@@ -1,29 +1,28 @@
-# HLD Фаза 1 — Реализация на виртуальных роботах v1.1
+# HLD Фаза 1 — Реализация на виртуальных роботах v1.2
 
 Цель: отладить весь ПО стек без физического железа.
-Транспорт: Zenoh (сервисы) + UDP (движение).
+Транспорт: **Zenoh везде** — агенты и виртуальные роботы через единый Zenoh Router.
 
 ## Версии
 
 | Версия | Дата | Изменения | Статус |
 |--------|------|-----------|--------|
 | v1.0 | — | MQTT транспорт | архив |
-| v1.1 | 2026-03-16 | Zenoh+UDP согласно [[../software/hld_software_v3_0\|HLD SW v3.0]] | черновик |
+| v1.1 | 2026-03-16 | Zenoh+UDP, Robot Gateway | архив |
+| v1.2 | 2026-03-16 | Полный Zenoh, Robot Gateway убран | черновик |
 
 ## Зависимости
 
-- [[../software/hld_software_v3_0|HLD Программный стек v3.0]] — должен быть финализирован
+- [[../software/hld_software_v3_0|HLD Программный стек v3.1]]
 
 ## Стек Phase 1
 
 | Слой | Технология |
 |------|-----------|
 | LLM | Ollama + Phi-3 Mini |
-| Агенты + Координатор | Python asyncio |
-| Транспорт (сервисы) | Zenoh Router + eclipse-zenoh |
-| Транспорт (движение) | UDP socket |
-| Robot Gateway | Python процесс (новый) |
-| Виртуальный робот | Python mock |
+| Агенты + Координатор | Python asyncio + eclipse-zenoh |
+| Транспорт | Zenoh Router |
+| Виртуальный робот | Python mock + eclipse-zenoh |
 | Dashboard | FastAPI + WebSocket, :8000 |
 
 ## Шаг 1 — Инфраструктура
@@ -33,7 +32,7 @@
 ```bash
 # Скачать zenohd: https://github.com/eclipse-zenoh/zenoh/releases
 ./zenohd
-# Роутер слушает :7447 (по умолчанию)
+# Роутер слушает :7447
 
 # Проверка
 pip install eclipse-zenoh
@@ -44,121 +43,96 @@ z_sub -k "test/**"
 ### 1.2 Ollama + модель
 
 ```bash
-# Установить Ollama: https://ollama.com
 ollama pull phi3:mini
-ollama serve  # API на http://localhost:11434
+ollama serve  # API: http://localhost:11434
 ```
 
 ### 1.3 Python окружение
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate  # или .venv\Scripts\activate на Windows
+.venv\Scripts\activate
 pip install eclipse-zenoh openai fastapi uvicorn websockets httpx
-# paho-mqtt — НЕ НУЖЕН в v1.1
 ```
 
 ## Шаг 2 — Виртуальный робот (Python Mock)
 
-Каждый виртуальный робот — отдельный процесс.
-
-**Поведение:**
-- Публикует `robot/{id}/state` через Zenoh (2 Гц)
-- Подписывается на `robot/{id}/cmd` через Zenoh
-- Принимает UDP пакеты от Robot Gateway (порт 9000+id)
-- Симулирует изменение позиции серво
+Каждый виртуальный робот — отдельный процесс. Подписывается на `robot/{id}/cmd` и публикует `robot/{id}/state` — всё через Zenoh.
 
 ```python
-# virtual_robot.py (skeleton)
-import zenoh, asyncio, socket, json, time
+# virtual_robot.py
+import zenoh, json, time, asyncio
 
-async def run(robot_id: int):
-    session = zenoh.open()
-    udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    udp_sock.bind(("0.0.0.0", 9000 + robot_id))
-    udp_sock.setblocking(False)
+def run(robot_id: int):
+    session = zenoh.open(zenoh.Config())
 
+    servos = [90] * 20  # текущие углы
+
+    def on_cmd(sample):
+        cmd = json.loads(bytes(sample.payload))
+        # Phase 1: заглушка — просто принимаем команду
+        print(f"Robot {robot_id} cmd: {cmd}")
+
+    sub = session.declare_subscriber(f"robot/{robot_id}/cmd", on_cmd)
     pub = session.declare_publisher(f"robot/{robot_id}/state")
-    sub = session.declare_subscriber(f"robot/{robot_id}/cmd", lambda s: handle_cmd(s))
 
     while True:
-        state = {"id": robot_id, "pos": [0]*20, "ts": time.time()}
+        state = {"id": robot_id, "servos": servos, "ts": time.time()}
         pub.put(json.dumps(state))
-        await asyncio.sleep(0.5)
+        time.sleep(0.5)  # 2 Гц
 ```
 
-## Шаг 3 — Robot Gateway
+## Шаг 3 — Агенты и Координатор
 
-Новый компонент (отсутствовал в v1.0). Один процесс на робота.
-
-**Поведение:**
-- Подписывается на `robot/{id}/cmd` через Zenoh
-- Переводит команду в углы серво (IK — упрощённая заглушка для Phase 1)
-- Отправляет UDP пакет на Virtual Robot / ESP32
+Публикуют `robot/{id}/cmd` через Zenoh с `Priority::RealTime`:
 
 ```python
-# robot_gateway.py (skeleton)
-import zenoh, socket, json
+# agent.py (фрагмент)
+import zenoh, json
 
-def on_cmd(sample):
-    cmd = json.loads(sample.payload)
-    servos = inverse_kinematics(cmd)  # заглушка: [90]*20
-    pkt = json.dumps({"servos": servos, "timestamp": cmd["ts"]}).encode()
-    udp_sock.sendto(pkt, ("127.0.0.1", 9000 + cmd["robot_id"]))
+config = zenoh.Config()
+session = zenoh.open(config)
 
-session = zenoh.open()
-udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-sub = session.declare_subscriber("robot/+/cmd", on_cmd)
+# Объявить publisher с RealTime QoS
+pub = session.declare_publisher(
+    f"robot/{robot_id}/cmd",
+    priority=zenoh.Priority.REAL_TIME(),
+    congestion_control=zenoh.CongestionControl.DROP()
+)
+
+def send_cmd(action: str):
+    pub.put(json.dumps({"action": action, "ts": time.time()}))
 ```
 
-> ⚠️ IK — заглушка `[90]*20` для Phase 1. Реальная IK — Phase 2 blocker.
+## Шаг 4 — Dashboard
 
-## Шаг 4 — Агенты и Координатор
-
-Минимальные изменения от v1.0 (замена paho → eclipse-zenoh):
-
-```python
-# Было (v1.0 paho):
-# client.publish("robot/1/cmd", payload)
-
-# Стало (v1.1 zenoh):
-session = zenoh.open()
-pub = session.declare_publisher("robot/1/cmd")
-pub.put(json.dumps(cmd))
-```
-
-Цикл координатора: 5 сек. Цикл агента: 1 сек. Логика без изменений.
-
-## Шаг 5 — Dashboard
-
-Без изменений от v1.0. FastAPI + WebSocket + Canvas 2D.
+FastAPI + WebSocket + Canvas 2D. Без изменений относительно v1.0.
 
 ```bash
 uvicorn dashboard:app --port 8000
-# Открыть http://localhost:8000
+# http://localhost:8000
 ```
 
-## Шаг 6 — Webots (Phase 1b)
+## Шаг 5 — Webots (Phase 1b)
 
-Контроллер Webots использует eclipse-zenoh вместо paho-mqtt.
-URDF модели нет — **блокер для Phase 1b**.
-
-## Шаг 7 — ESP32 (Phase 2)
-
-ESP32 получает только UDP. Zenoh на ESP32 в Phase 2 не нужен.
+Контроллер Webots подписывается на `robot/{id}/cmd` через eclipse-zenoh — напрямую, без промежуточных компонентов.
 
 ```python
-# MicroPython UDP receiver (skeleton)
-import usocket, ujson, machine
+# webots_controller.py (фрагмент)
+import zenoh
+from controller import Robot
 
-sock = usocket.socket(usocket.AF_INET, usocket.SOCK_DGRAM)
-sock.bind(("0.0.0.0", 9001))  # robot_id = 1
+robot = Robot()
+session = zenoh.open(zenoh.Config())
 
-while True:
-    data, _ = sock.recvfrom(256)
-    cmd = ujson.loads(data)
-    set_servos(cmd["servos"])  # → PCA9685
+def on_cmd(sample):
+    cmd = json.loads(bytes(sample.payload))
+    apply_to_webots_motors(robot, cmd)
+
+session.declare_subscriber("robot/1/cmd", on_cmd)
 ```
+
+Блокер: **URDF 28-30 см гуманоида** — нет файла.
 
 ## Порядок запуска
 
@@ -166,38 +140,35 @@ while True:
 # Терминал 1 — Zenoh Router
 ./zenohd
 
-# Терминал 2 — Robot Gateway (один на все роботы)
-python robot_gateway.py
-
-# Терминал 3 — Виртуальные роботы
+# Терминал 2 — Виртуальные роботы
 python virtual_robot.py 1 &
 python virtual_robot.py 2 &
 python virtual_robot.py 3 &
 python virtual_robot.py 4 &
 
-# Терминал 4 — Агенты + Координатор
+# Терминал 3 — Агенты + Координатор
 python swarm_coordinator.py
 
-# Терминал 5 — Dashboard
+# Терминал 4 — Dashboard
 uvicorn dashboard:app --port 8000
 ```
+
+Убран: терминал Robot Gateway (компонент не нужен).
 
 ## Полнота разделов
 
 | Раздел | Готовность | Блокер |
 |--------|------------|--------|
-| Инфраструктура (Zenoh, Ollama) | 85% | Конфиг zenohd не задокументирован |
-| Virtual Robot | 80% | Код переписать на eclipse-zenoh |
-| Robot Gateway | 40% | Нет реализации, только скелет |
+| Инфраструктура (Zenoh, Ollama) | 90% | — |
+| Virtual Robot (Zenoh) | 85% | Написать финальный код |
 | Агенты / Координатор | 90% | Заменить paho → zenoh |
 | Dashboard | 100% | — |
 | Webots | 70% | URDF нет |
-| ESP32 | 50% | UDP firmware не реализован |
 
-**Общая готовность: ~76%**
+**Общая готовность: ~87%** (упростилась после удаления Gateway)
 
 ## Связанные документы
 
 - [[../index|HLD Навигатор]]
-- [[../software/hld_software_v3_0|HLD Программный стек v3.0]]
+- [[../software/hld_software_v3_0|HLD Программный стек v3.1]]
 - [[../hardware/hld_hardware_v1_1|HLD Железо v1.1]]
