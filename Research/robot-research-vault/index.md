@@ -4,6 +4,7 @@
 
 ## Навигация
 
+- [[open_questions|Открытые вопросы и приоритеты]] ← старт здесь
 - [[hld/index|HLD — проектные решения]]
 - [[research/robot-network-architecture/index|Исследование: сетевая архитектура роботов]]
 - [[research/robot-hardware-research/index|Исследование: hardware решения]]
