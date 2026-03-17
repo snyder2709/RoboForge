@@ -1,4 +1,8 @@
-#VRML_SIM R2023b utf8
+#VRML_SIM R2025a utf8
+
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackground.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/floors/protos/RectangleArena.proto"
 
 WorldInfo {
   title "RoboForge Simulation"
@@ -28,13 +32,429 @@ DEF ARENA RectangleArena {
 }
 
 DEF ROBOT Robot {
-  translation 0 0.14 0
+  translation 0 0.29 0
   rotation 0 1 0 0
   name "roboforge_robot"
   controller "roboforge_controller"
   supervisor TRUE
   children [
-    # Скелет загружается через URDF-импорт:
-    # Wizards → Import a URDF robot → humanoid_v1.urdf
+    # Torso (root body)
+    DEF TORSO Shape {
+      geometry Box { size 0.10 0.12 0.06 }
+      appearance PBRAppearance { baseColor 0.3 0.5 0.8 }
+    }
+
+    # ── HEAD ──────────────────────────────────────────────────────────────────
+    HingeJoint {
+      jointParameters HingeJointParameters {
+        axis 0 1 0
+        anchor 0 0.06 0
+      }
+      device [
+        RotationalMotor {
+          name "head_pan"
+          minPosition -1.57
+          maxPosition 1.57
+          maxVelocity 3.0
+        }
+        PositionSensor { name "head_pan_sensor" }
+      ]
+      endPoint Solid {
+        translation 0 0.11 0
+        children [
+          Shape {
+            geometry Sphere { radius 0.05 }
+            appearance PBRAppearance { baseColor 0.9 0.7 0.5 }
+          }
+        ]
+        name "head"
+        boundingObject Sphere { radius 0.05 }
+        physics Physics {}
+      }
+    }
+
+    # ── LEFT ARM ──────────────────────────────────────────────────────────────
+    HingeJoint {
+      jointParameters HingeJointParameters {
+        axis 0 0 1
+        anchor -0.08 0.04 0
+      }
+      device [
+        RotationalMotor {
+          name "left_shoulder_pitch"
+          minPosition -3.14
+          maxPosition 3.14
+          maxVelocity 3.0
+        }
+        PositionSensor { name "left_shoulder_pitch_sensor" }
+      ]
+      endPoint Solid {
+        translation -0.08 -0.01 0
+        children [
+          Shape {
+            geometry Box { size 0.04 0.10 0.04 }
+            appearance PBRAppearance { baseColor 0.3 0.5 0.8 }
+          }
+          HingeJoint {
+            jointParameters HingeJointParameters {
+              axis 0 0 1
+              anchor 0 -0.05 0
+            }
+            device [
+              RotationalMotor {
+                name "left_elbow_pitch"
+                minPosition -2.09
+                maxPosition 0.0
+                maxVelocity 3.0
+              }
+              PositionSensor { name "left_elbow_pitch_sensor" }
+            ]
+            endPoint Solid {
+              translation 0 -0.095 0
+              children [
+                Shape {
+                  geometry Box { size 0.035 0.09 0.035 }
+                  appearance PBRAppearance { baseColor 0.3 0.5 0.8 }
+                }
+                HingeJoint {
+                  jointParameters HingeJointParameters {
+                    axis 0 0 1
+                    anchor 0 -0.045 0
+                  }
+                  device [
+                    RotationalMotor {
+                      name "left_wrist_pitch"
+                      minPosition -1.57
+                      maxPosition 1.57
+                      maxVelocity 3.0
+                    }
+                    PositionSensor { name "left_wrist_pitch_sensor" }
+                  ]
+                  endPoint Solid {
+                    translation 0 -0.065 0
+                    children [
+                      Shape {
+                        geometry Box { size 0.03 0.04 0.02 }
+                        appearance PBRAppearance { baseColor 0.9 0.7 0.5 }
+                      }
+                    ]
+                    name "left_hand"
+                    boundingObject Box { size 0.03 0.04 0.02 }
+                    physics Physics {}
+                  }
+                }
+              ]
+              name "left_lower_arm"
+              boundingObject Box { size 0.035 0.09 0.035 }
+              physics Physics {}
+            }
+          }
+        ]
+        name "left_upper_arm"
+        boundingObject Box { size 0.04 0.10 0.04 }
+        physics Physics {}
+      }
+    }
+
+    # ── RIGHT ARM ─────────────────────────────────────────────────────────────
+    HingeJoint {
+      jointParameters HingeJointParameters {
+        axis 0 0 1
+        anchor 0.08 0.04 0
+      }
+      device [
+        RotationalMotor {
+          name "right_shoulder_pitch"
+          minPosition -3.14
+          maxPosition 3.14
+          maxVelocity 3.0
+        }
+        PositionSensor { name "right_shoulder_pitch_sensor" }
+      ]
+      endPoint Solid {
+        translation 0.08 -0.01 0
+        children [
+          Shape {
+            geometry Box { size 0.04 0.10 0.04 }
+            appearance PBRAppearance { baseColor 0.3 0.5 0.8 }
+          }
+          HingeJoint {
+            jointParameters HingeJointParameters {
+              axis 0 0 1
+              anchor 0 -0.05 0
+            }
+            device [
+              RotationalMotor {
+                name "right_elbow_pitch"
+                minPosition -2.09
+                maxPosition 0.0
+                maxVelocity 3.0
+              }
+              PositionSensor { name "right_elbow_pitch_sensor" }
+            ]
+            endPoint Solid {
+              translation 0 -0.095 0
+              children [
+                Shape {
+                  geometry Box { size 0.035 0.09 0.035 }
+                  appearance PBRAppearance { baseColor 0.3 0.5 0.8 }
+                }
+                HingeJoint {
+                  jointParameters HingeJointParameters {
+                    axis 0 0 1
+                    anchor 0 -0.045 0
+                  }
+                  device [
+                    RotationalMotor {
+                      name "right_wrist_pitch"
+                      minPosition -1.57
+                      maxPosition 1.57
+                      maxVelocity 3.0
+                    }
+                    PositionSensor { name "right_wrist_pitch_sensor" }
+                  ]
+                  endPoint Solid {
+                    translation 0 -0.065 0
+                    children [
+                      Shape {
+                        geometry Box { size 0.03 0.04 0.02 }
+                        appearance PBRAppearance { baseColor 0.9 0.7 0.5 }
+                      }
+                    ]
+                    name "right_hand"
+                    boundingObject Box { size 0.03 0.04 0.02 }
+                    physics Physics {}
+                  }
+                }
+              ]
+              name "right_lower_arm"
+              boundingObject Box { size 0.035 0.09 0.035 }
+              physics Physics {}
+            }
+          }
+        ]
+        name "right_upper_arm"
+        boundingObject Box { size 0.04 0.10 0.04 }
+        physics Physics {}
+      }
+    }
+
+    # ── LEFT LEG ──────────────────────────────────────────────────────────────
+    # hip_yaw → hip_connector → hip_pitch → upper_leg → knee → lower_leg → ankle → foot
+    HingeJoint {
+      jointParameters HingeJointParameters {
+        axis 0 1 0
+        anchor -0.03 -0.06 0
+      }
+      device [
+        RotationalMotor {
+          name "left_hip_yaw"
+          minPosition -1.57
+          maxPosition 1.57
+          maxVelocity 3.0
+        }
+        PositionSensor { name "left_hip_yaw_sensor" }
+      ]
+      endPoint Solid {
+        translation -0.03 -0.06 0
+        children [
+          HingeJoint {
+            jointParameters HingeJointParameters {
+              axis 0 0 1
+              anchor 0 0 0
+            }
+            device [
+              RotationalMotor {
+                name "left_hip_pitch"
+                minPosition -1.57
+                maxPosition 1.57
+                maxVelocity 3.0
+              }
+              PositionSensor { name "left_hip_pitch_sensor" }
+            ]
+            endPoint Solid {
+              translation 0 -0.055 0
+              children [
+                Shape {
+                  geometry Box { size 0.04 0.10 0.04 }
+                  appearance PBRAppearance { baseColor 0.3 0.5 0.8 }
+                }
+                HingeJoint {
+                  jointParameters HingeJointParameters {
+                    axis 0 0 1
+                    anchor 0 -0.05 0
+                  }
+                  device [
+                    RotationalMotor {
+                      name "left_knee_pitch"
+                      minPosition 0.0
+                      maxPosition 2.09
+                      maxVelocity 3.0
+                    }
+                    PositionSensor { name "left_knee_pitch_sensor" }
+                  ]
+                  endPoint Solid {
+                    translation 0 -0.095 0
+                    children [
+                      Shape {
+                        geometry Box { size 0.035 0.09 0.035 }
+                        appearance PBRAppearance { baseColor 0.3 0.5 0.8 }
+                      }
+                      HingeJoint {
+                        jointParameters HingeJointParameters {
+                          axis 0 0 1
+                          anchor 0 -0.045 0
+                        }
+                        device [
+                          RotationalMotor {
+                            name "left_ankle_pitch"
+                            minPosition -0.79
+                            maxPosition 0.79
+                            maxVelocity 3.0
+                          }
+                          PositionSensor { name "left_ankle_pitch_sensor" }
+                        ]
+                        endPoint Solid {
+                          translation 0.02 -0.06 0
+                          children [
+                            Shape {
+                              geometry Box { size 0.07 0.02 0.04 }
+                              appearance PBRAppearance { baseColor 0.15 0.15 0.15 }
+                            }
+                          ]
+                          name "left_foot"
+                          boundingObject Box { size 0.07 0.02 0.04 }
+                          physics Physics {}
+                        }
+                      }
+                    ]
+                    name "left_lower_leg"
+                    boundingObject Box { size 0.035 0.09 0.035 }
+                    physics Physics {}
+                  }
+                }
+              ]
+              name "left_upper_leg"
+              boundingObject Box { size 0.04 0.10 0.04 }
+              physics Physics {}
+            }
+          }
+        ]
+        name "left_hip_connector"
+        boundingObject Sphere { radius 0.02 }
+        physics Physics {}
+      }
+    }
+
+    # ── RIGHT LEG ─────────────────────────────────────────────────────────────
+    HingeJoint {
+      jointParameters HingeJointParameters {
+        axis 0 1 0
+        anchor 0.03 -0.06 0
+      }
+      device [
+        RotationalMotor {
+          name "right_hip_yaw"
+          minPosition -1.57
+          maxPosition 1.57
+          maxVelocity 3.0
+        }
+        PositionSensor { name "right_hip_yaw_sensor" }
+      ]
+      endPoint Solid {
+        translation 0.03 -0.06 0
+        children [
+          HingeJoint {
+            jointParameters HingeJointParameters {
+              axis 0 0 1
+              anchor 0 0 0
+            }
+            device [
+              RotationalMotor {
+                name "right_hip_pitch"
+                minPosition -1.57
+                maxPosition 1.57
+                maxVelocity 3.0
+              }
+              PositionSensor { name "right_hip_pitch_sensor" }
+            ]
+            endPoint Solid {
+              translation 0 -0.055 0
+              children [
+                Shape {
+                  geometry Box { size 0.04 0.10 0.04 }
+                  appearance PBRAppearance { baseColor 0.3 0.5 0.8 }
+                }
+                HingeJoint {
+                  jointParameters HingeJointParameters {
+                    axis 0 0 1
+                    anchor 0 -0.05 0
+                  }
+                  device [
+                    RotationalMotor {
+                      name "right_knee_pitch"
+                      minPosition 0.0
+                      maxPosition 2.09
+                      maxVelocity 3.0
+                    }
+                    PositionSensor { name "right_knee_pitch_sensor" }
+                  ]
+                  endPoint Solid {
+                    translation 0 -0.095 0
+                    children [
+                      Shape {
+                        geometry Box { size 0.035 0.09 0.035 }
+                        appearance PBRAppearance { baseColor 0.3 0.5 0.8 }
+                      }
+                      HingeJoint {
+                        jointParameters HingeJointParameters {
+                          axis 0 0 1
+                          anchor 0 -0.045 0
+                        }
+                        device [
+                          RotationalMotor {
+                            name "right_ankle_pitch"
+                            minPosition -0.79
+                            maxPosition 0.79
+                            maxVelocity 3.0
+                          }
+                          PositionSensor { name "right_ankle_pitch_sensor" }
+                        ]
+                        endPoint Solid {
+                          translation 0.02 -0.06 0
+                          children [
+                            Shape {
+                              geometry Box { size 0.07 0.02 0.04 }
+                              appearance PBRAppearance { baseColor 0.15 0.15 0.15 }
+                            }
+                          ]
+                          name "right_foot"
+                          boundingObject Box { size 0.07 0.02 0.04 }
+                          physics Physics {}
+                        }
+                      }
+                    ]
+                    name "right_lower_leg"
+                    boundingObject Box { size 0.035 0.09 0.035 }
+                    physics Physics {}
+                  }
+                }
+              ]
+              name "right_upper_leg"
+              boundingObject Box { size 0.04 0.10 0.04 }
+              physics Physics {}
+            }
+          }
+        ]
+        name "right_hip_connector"
+        boundingObject Sphere { radius 0.02 }
+        physics Physics {}
+      }
+    }
   ]
+  boundingObject Box { size 0.10 0.12 0.06 }
+  physics Physics {
+    density -1
+    mass 1.0
+  }
 }
