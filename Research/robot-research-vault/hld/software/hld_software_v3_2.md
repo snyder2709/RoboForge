@@ -228,6 +228,6 @@ Servo Task (50 Гц, RT)    → IK → PCA9685 I2C → 20 серво
 
 - [[../index|HLD Навигатор]]
 - [[../hardware/hld_hardware_v1_2|HLD Железо v1.2]]
-- [[../phases/hld_phase1_v1_1|HLD Фаза 1 v1.1]]
+- [[../phases/hld_phase1_v1_1|HLD Фаза 1 v1.2]]
 - [[../../research/robot-network-architecture/artefacts/architectures/zenoh_distributed_architecture|Распределённая архитектура Zenoh]]
 - [[../../research/robot-hardware-research/index|Исследование: Hardware решения]]

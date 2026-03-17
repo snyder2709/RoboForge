@@ -13,7 +13,7 @@
 
 ## Зависимости
 
-- [[../software/hld_software_v3_0|HLD Программный стек v3.1]]
+- [[../software/hld_software_v3_2|HLD Программный стек v3.2]]
 
 ## Стек Phase 1
 
@@ -168,5 +168,5 @@ uvicorn dashboard:app --port 8000
 ## Связанные документы
 
 - [[../index|HLD Навигатор]]
-- [[../software/hld_software_v3_0|HLD Программный стек v3.1]]
-- [[../hardware/hld_hardware_v1_1|HLD Железо v1.1]]
+- [[../software/hld_software_v3_2|HLD Программный стек v3.2]]
+- [[../hardware/hld_hardware_v1_2|HLD Железо v1.2]]
