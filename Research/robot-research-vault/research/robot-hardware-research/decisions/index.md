@@ -82,4 +82,4 @@ HLD Hardware v1.1 упоминает "v2.5 — MaixCAM как автономны
 
 - [[../index|Исследование: Hardware]]
 - [[../artefacts/comparisons/controller_comparison|Сравнение контроллеров]]
-- [[../../../../hld/hardware/hld_hardware_v1_1|HLD Железо v1.1]]
+- [[../../../../hld/hardware/hld_hardware_v1_2|HLD Железо v1.2]]

@@ -108,6 +108,6 @@
 
 - [[../index|HLD Навигатор]]
 - [[../software/hld_software_v3_2|HLD Программный стек v3.2]]
-- [[../phases/hld_phase1_v1_1|HLD Фаза 1 v1.1]]
+- [[../phases/hld_phase1_v1_1|HLD Фаза 1 v1.3]]
 - [[../../research/robot-hardware-research/index|Исследование: Hardware решения]]
 - [[../../research/robot-hardware-research/artefacts/comparisons/controller_comparison|Сравнение контроллеров]]

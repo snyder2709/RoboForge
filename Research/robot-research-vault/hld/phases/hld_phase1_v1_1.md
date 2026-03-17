@@ -1,7 +1,8 @@
-# HLD Фаза 1 — Реализация на виртуальных роботах v1.2
+# HLD Фаза 1 — Реализация на виртуальных роботах v1.3
 
 Цель: отладить весь ПО стек без физического железа.
 Транспорт: **Zenoh везде** — агенты и виртуальные роботы через единый Zenoh Router.
+UI: **Tauri 2.0** — Desktop (Brain PC) + Mobile (iOS/Android), монорепо.
 
 ## Версии
 
@@ -9,7 +10,8 @@
 |--------|------|-----------|--------|
 | v1.0 | — | MQTT транспорт | архив |
 | v1.1 | 2026-03-16 | Zenoh+UDP, Robot Gateway | архив |
-| v1.2 | 2026-03-16 | Полный Zenoh, Robot Gateway убран | черновик |
+| v1.2 | 2026-03-16 | Полный Zenoh, Robot Gateway убран | архив |
+| v1.3 | 2026-03-17 | Tauri 2.0 вместо FastAPI Dashboard, монорепо | черновик |
 
 ## Зависимости
 
@@ -23,7 +25,9 @@
 | Агенты + Координатор | Python asyncio + eclipse-zenoh |
 | Транспорт | Zenoh Router |
 | Виртуальный робот | Python mock + eclipse-zenoh |
-| Dashboard | FastAPI + WebSocket, :8000 |
+| Desktop UI | Tauri 2.0 Desktop (Rust + WebUI) |
+| Mobile UI | Tauri 2.0 Mobile (iOS / Android) |
+| Монорепо | pnpm workspaces (apps/desktop, apps/mobile, packages/ui) |
 
 ## Шаг 1 — Инфраструктура
 
@@ -52,7 +56,7 @@ ollama serve  # API: http://localhost:11434
 ```bash
 python -m venv .venv
 .venv\Scripts\activate
-pip install eclipse-zenoh openai fastapi uvicorn websockets httpx
+pip install eclipse-zenoh openai httpx
 ```
 
 ## Шаг 2 — Виртуальный робот (Python Mock)
@@ -104,13 +108,29 @@ def send_cmd(action: str):
     pub.put(json.dumps({"action": action, "ts": time.time()}))
 ```
 
-## Шаг 4 — Dashboard
+## Шаг 4 — Dashboard (Tauri 2.0)
 
-FastAPI + WebSocket + Canvas 2D. Без изменений относительно v1.0.
+**Tauri Desktop** — основной UI на Brain PC. Rust backend подписывается на Zenoh топики и транслирует события в WebView через Tauri events.
 
 ```bash
-uvicorn dashboard:app --port 8000
-# http://localhost:8000
+# Структура монорепо
+apps/
+  desktop/   # Tauri 2.0 Desktop (Brain PC)
+  mobile/    # Tauri 2.0 Mobile (iOS / Android)
+packages/
+  ui/        # Shared компоненты (React / Svelte)
+  zenoh-ipc/ # Tauri plugin: Zenoh ↔ WebView bridge
+
+# Запуск Desktop (dev)
+cd apps/desktop && cargo tauri dev
+```
+
+**Для Phase 0** (dev-режим без Tauri, для быстрого старта):
+
+```bash
+# Опционально: простой HTML/JS клиент для отладки Zenoh топиков
+# Подключается к REST API zenohd (:8000 zenoh admin)
+z_sub -k "robot/**"   # CLI вместо UI на старте
 ```
 
 ## Шаг 5 — Webots (Phase 1b)
@@ -149,8 +169,8 @@ python virtual_robot.py 4 &
 # Терминал 3 — Агенты + Координатор
 python swarm_coordinator.py
 
-# Терминал 4 — Dashboard
-uvicorn dashboard:app --port 8000
+# Терминал 4 — Tauri Desktop UI
+cd apps/desktop && cargo tauri dev
 ```
 
 ## Полнота разделов
@@ -158,12 +178,13 @@ uvicorn dashboard:app --port 8000
 | Раздел | Готовность | Блокер |
 |--------|------------|--------|
 | Инфраструктура (Zenoh, Ollama) | 90% | — |
-| Virtual Robot (Zenoh) | 85% | Написать финальный код |
+| Virtual Robot (Zenoh) | 85% | Написать финальный код (Q-01) |
 | Агенты / Координатор | 90% | Заменить paho → zenoh |
-| Dashboard | 100% | — |
+| Tauri Desktop UI | 10% | Монорепо не инициализировано, STT не выбран |
+| Tauri Mobile UI | 5% | Монорепо не инициализировано |
 | Webots | 70% | URDF нет |
 
-**Общая готовность: ~87%** (упростилась после удаления Gateway)
+**Общая готовность: ~82%**
 
 ## Связанные документы
 
