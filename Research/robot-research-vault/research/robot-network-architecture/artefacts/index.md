@@ -20,3 +20,4 @@
 ## Диаграммы
 
 - [[diagrams/system_overview|Обзор системы]]
+- [[diagrams/virtual_robot_component|Virtual Robot — компонентная диаграмма (Phase 0)]]

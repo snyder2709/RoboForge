@@ -15,6 +15,7 @@
 ## Правила для агентов
 
 - [[Research/robot-research-vault/claude_rules|claude_rules]] — правила генерации артефактов, PlantUML, версионирование
+- [[services/CLAUDE.md|services/CLAUDE.md]] — Python сервисы: конвенции, Zenoh, правило новых сервисов
 
 ## Статус проекта (2026-03-17)
 
@@ -40,7 +41,7 @@
 
 | Фаза | Статус | Что нужно |
 |------|--------|----------|
-| Phase 0 — виртуальные роботы | **🔴 Q-01: написать Virtual Robot** | eclipse-zenoh код |
+| Phase 0 — виртуальные роботы | **🟡 Q-01: virtual_robot.py готов** | coordinator + agents (TODO) |
 | Phase 1 — Webots | ~2-3 нед | URDF модель |
 | Phase 2 — реальный робот | ~4-8 нед после Phase 1 | Закупка ~$134/робот, 3D-печать, IK |
 
@@ -52,6 +53,26 @@
 
 - [[Research/robot-research-vault/research/robot-network-architecture/index|Сетевая архитектура]]
 - [[Research/robot-research-vault/research/robot-hardware-research/index|Hardware решения (контроллеры)]]
+
+## Организация монорепо
+
+```
+RoboForge/
+├── Research/robot-research-vault/   ← vault (знания + HLD)
+├── services/                        ← Python бэкенд (Zenoh)
+│   ├── CLAUDE.md
+│   ├── README.md
+│   ├── start.sh                     ← запуск Phase 0
+│   └── virtual_robot/
+│       ├── virtual_robot.py
+│       └── requirements.txt
+└── apps/                            ← Tauri монорепо (TODO)
+    ├── desktop/
+    ├── mobile/
+    └── packages/
+        ├── ui/
+        └── zenoh-ipc/
+```
 
 ## Организация vault
 
