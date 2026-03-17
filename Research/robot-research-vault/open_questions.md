@@ -6,20 +6,22 @@
 
 ---
 
-## Phase 0 — Виртуальные роботы (ГОТОВ К СТАРТУ)
+## Phase 0 — Виртуальные роботы
 
 | # | Вопрос | Приоритет | Блокирует |
 |---|--------|-----------|-----------|
-| Q-01 | Обновить Virtual Robot под eclipse-zenoh (убрать старый транспорт) | 🔴 | Phase 0 старт |
+| ~~Q-01~~ | ~~Написать Virtual Robot под eclipse-zenoh~~ | ✅ решено 2026-03-17: `services/virtual_robot/virtual_robot.py` | — |
 | ~~Q-02~~ | ~~Заменить Dashboard FastAPI → Tauri~~ | ✅ решено 2026-03-17 | — |
+| Q-19 | Написать `swarm_coordinator.py` (`services/coordinator/`) | 🔴 | Phase 0 полный старт |
+| Q-20 | Написать `robot_agent.py` (`services/agents/`) | 🔴 | Phase 0 полный старт |
 
 ---
 
-## Phase 1 — Software стек (первый приоритет)
+## Phase 1 — Software стек
 
 | # | Вопрос | Приоритет | Блокирует |
 |---|--------|-----------|-----------|
-| ~~Q-03~~ | STT движок: **whisper.cpp + large-v3-russian + CUDA** — решено 2026-03-17. Brain PC: RTX 3050 6GB (модель ~3GB FP16, влезает), latency ~0.3-0.5с/фраза. 16GB RAM хватает на всё одновременно. | ✅ решено | — |
+| ~~Q-03~~ | STT движок: **whisper.cpp + large-v3-russian + CUDA** — решено 2026-03-17. Brain PC: RTX 3050 6GB, latency ~0.3-0.5с/фраза. | ✅ решено | — |
 | Q-04 | Zenoh QoS конфигурация для роя N > 4 роботов | 🟡 | масштабирование |
 | Q-05 | Выбор IK алгоритма для 20 DOF | 🔴 | Phase 2 |
 | Q-06 | Gap: слой между LLM командой и детерминированным управлением — планировщик траекторий | 🔴 | Phase 2 |
@@ -40,7 +42,7 @@
 
 ## UI / Tauri
 
-> **Решено 2026-03-17:** UI = Tauri 2.0, монорепо (pnpm workspaces), два приложения: Desktop (Brain PC) + Mobile (iOS/Android).
+> **Решено 2026-03-17:** UI = Tauri 2.0, монорепо (pnpm workspaces), Desktop + Mobile.
 
 | # | Вопрос | Приоритет | Блокирует |
 |---|--------|-----------|-----------|
@@ -56,21 +58,20 @@
 | # | Вопрос | Приоритет | Блокирует |
 |---|--------|-----------|-----------|
 | Q-15 | SG2002 (Milk-V Duo) как автономный мозг v2.5 — валидация latency FreeRTOS | 🟢 | HLD v2.5 |
-| Q-16 | Zenoh конфигурация роя N > 4 роботов | 🟢 | масштабирование |
-| Q-17 | IK для SG2002 — запуск на RISC-V 700 MHz FreeRTOS ядре | 🟢 | Phase 3 |
+| Q-16 | IK для SG2002 — запуск на RISC-V 700 MHz FreeRTOS ядре | 🟢 | Phase 3 |
+| Q-17 | Zenoh конфигурация роя N > 10 роботов (нагрузочные тесты) | 🟢 | масштабирование |
 
 ---
 
-## Ближайший спринт — Phase 0→1 software
+## Ближайший спринт — Phase 0 software
 
 **Порядок работы:**
 
-1. **Q-01** — написать Virtual Robot на eclipse-zenoh (кода нет, только HLD-скелет)
-2. ~~Q-03~~ — решено: whisper.cpp + large-v3-russian + CUDA
-3. ~~Q-18~~ — решено: Nuxt 4
-4. **Q-06** — проработать планировщик между LLM и IK (Phase 2)
-5. **Q-05** — выбрать IK алгоритм (Phase 2)
-6. **Q-07** — URDF модель (Phase 1→2)
+1. **Q-19** — написать `swarm_coordinator.py` (`services/coordinator/`)
+2. **Q-20** — написать `robot_agent.py` (`services/agents/`)
+3. **Q-06** — проработать планировщик между LLM и IK (Phase 2)
+4. **Q-05** — выбрать IK алгоритм (Phase 2)
+5. **Q-07** — URDF модель (Phase 1→2)
 
 ## Связанные документы
 
