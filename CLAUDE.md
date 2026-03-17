@@ -20,10 +20,11 @@
 
 | Артефакт | Версия | Готовность | Статус |
 |----------|--------|------------|--------|
-| HLD Железо | v1.1 | ~85% | актуально |
-| HLD Программный стек | v3.0 | ~73% | черновик |
+| HLD Железо | v1.2 | ~88% | актуально |
+| HLD Программный стек | v3.2 | ~66% | черновик |
 | HLD Фаза 1 | v1.1 | ~76% | черновик |
 | Исследование сетевой архитектуры | — | ~80% | завершено |
+| Исследование hardware решений | — | ~50% | в процессе |
 
 ### Готовность к разработке
 
@@ -37,6 +38,11 @@
 
 - [[Research/robot-research-vault/hld/index|HLD Навигатор]]
 
+### Исследования
+
+- [[Research/robot-research-vault/research/robot-network-architecture/index|Сетевая архитектура]]
+- [[Research/robot-research-vault/research/robot-hardware-research/index|Hardware решения (контроллеры)]]
+
 ## Организация vault
 
 ```
@@ -46,10 +52,16 @@ Research/robot-research-vault/
 │   ├── software/hld_software_v3_0.md
 │   └── phases/hld_phase1_v1_1.md
 └── research/
-    └── robot-network-architecture/
-        └── artefacts/
-            ├── architectures/    ← архитектурные варианты
-            ├── flows/            ← потоки данных
-            ├── protocols/        ← сравнение протоколов
-            └── diagrams/         ← системные диаграммы
+    ├── robot-network-architecture/
+    │   └── artefacts/
+    │       ├── architectures/    ← архитектурные варианты
+    │       ├── flows/            ← потоки данных
+    │       ├── protocols/        ← сравнение протоколов
+    │       └── diagrams/         ← системные диаграммы
+    └── robot-hardware-research/
+        ├── notes/                ← заметки и находки
+        ├── artefacts/
+        │   └── comparisons/      ← сравнение контроллеров
+        ├── experiments/          ← проверка гипотез
+        └── decisions/            ← ADR (архитектурные решения)
 ```
