@@ -23,13 +23,15 @@ HLD Железо v1.2  →  независим
 | Фаза | Статус | Блокеры |
 |------|--------|---------|
 | Phase 0 — виртуальные роботы | **🔴 БЛОКЕР** | Q-01: обновить Virtual Robot под eclipse-zenoh |
-| Phase 1 — Webots симулятор | ~2-3 нед | URDF модель |
+| Phase 1 — Webots симулятор | **🟡 В процессе** | URDF импорт в Webots, coordinator |
 | Phase 2 — реальное железо | ~4-8 нед после Phase 1 | Закупка (~$134/робот), 3D-печать, IK |
 
 ## Открытые вопросы
 
 - [ ] IK алгоритм для 20 DOF (Phase 2 blocker)
-- [ ] URDF для Webots (28-30 см гуманоид, адаптация Poppy)
+- [x] URDF для Webots — `humanoid_v1.urdf` готов
+- [x] Базовый мир Webots — `simulation/worlds/roboforge.wbt` готов
+- [x] Контроллер Webots — `simulation/controllers/roboforge_controller/` готов
 - [ ] zenoh-pico конфигурация Pico 2W / ESP32 (QoS, discovery)
 - [ ] Zenoh конфигурация для роя N > 4 роботов
 

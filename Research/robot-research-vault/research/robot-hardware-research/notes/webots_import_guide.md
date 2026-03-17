@@ -1,5 +1,13 @@
 # Импорт URDF в Webots
 
+## Файлы симуляции
+
+| Файл | Путь |
+|------|------|
+| Мир Webots | `simulation/worlds/roboforge.wbt` |
+| Контроллер | `simulation/controllers/roboforge_controller/roboforge_controller.py` |
+| URDF модель | `Research/robot-research-vault/research/robot-hardware-research/artefacts/urdf/humanoid_v1.urdf` |
+
 ## Что нужно
 
 - Webots R2023b или новее (Windows x64)
