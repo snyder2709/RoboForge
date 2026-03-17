@@ -181,7 +181,7 @@ cd apps/desktop && cargo tauri dev
 | Инфраструктура (Zenoh, Ollama) | 90% | — |
 | Virtual Robot (Zenoh) | 85% | Написать финальный код (Q-01) |
 | Агенты / Координатор | 90% | Заменить paho → zenoh |
-| Tauri Desktop UI | 10% | Монорепо не инициализировано, STT не выбран |
+| Tauri Desktop UI | 15% | Монорепо не инициализировано (шаблон Nuxt 4 готов) |
 | Tauri Mobile UI | 5% | Монорепо не инициализировано |
 | Webots | 70% | URDF нет |
 
