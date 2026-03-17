@@ -5,7 +5,7 @@
 | Документ | Версия | Готовность | Статус | Обновлён |
 |----------|--------|------------|--------|----------|
 | [[hardware/hld_hardware_v1_2\|HLD Железо]] | v1.2 | ~88% | актуально | 2026-03-16 |
-| [[software/hld_software_v3_2\|HLD Программный стек]] | v3.2 | ~66% | черновик | 2026-03-16 |
+| [[software/hld_software_v3_2\|HLD Программный стек]] | v3.3 | ~70% | черновик | 2026-03-17 |
 | [[phases/hld_phase1_v1_1\|HLD Фаза 1]] | v1.3 | ~82% | черновик | 2026-03-17 |
 
 Статусы: `черновик` | `актуально` | `архив` | `заморожен`
@@ -32,6 +32,7 @@ HLD Железо v1.2  →  независим
 - [x] URDF для Webots — `humanoid_v1.urdf` готов
 - [x] Базовый мир Webots — `simulation/worlds/roboforge.wbt` готов
 - [x] Контроллер Webots — `simulation/controllers/roboforge_controller/` готов
+- [x] Как coordinator раздаёт задачи агентам → **решено: `swarm/task/{id}` Reliable по событию (Вариант B)** (2026-03-17)
 - [ ] zenoh-pico конфигурация Pico 2W / ESP32 (QoS, discovery)
 - [ ] Zenoh конфигурация для роя N > 4 роботов
 

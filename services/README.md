@@ -70,6 +70,7 @@ z_sub -k "swarm/**"
 | `robot/{id}/cmd` | Agent → VirtualRobot | RealTime + Drop | по событию | [CmdPayload](#cmdpayload) |
 | `robot/{id}/state` | VirtualRobot → Agent | BestEffort | 2 Гц | [StatePayload](#statepayload) |
 | `swarm/world_state` | Coordinator → все | Reliable | 0.2 Гц | [WorldStatePayload](#worldstatepayload) |
+| `swarm/task/{id}` | Coordinator → Agent | Reliable | по событию | [TaskPayload](#taskpayload) |
 | `swarm/events` | любой → Coordinator | Reliable | по событию | [EventPayload](#eventpayload) |
 | `ui/voice_cmd` | Tauri → Coordinator | Reliable | по событию | [VoiceCmdPayload](#voicecmdpayload) |
 | `ui/status` | Coordinator → Tauri | BestEffort | 1 Гц | [UiStatusPayload](#uistatuspayload) |
@@ -113,6 +114,30 @@ z_sub -k "swarm/**"
 | `ts` | float | Unix timestamp публикации |
 | `servos` | float[20] | Текущие углы сервоприводов |
 | `imu` | object | Ориентация IMU в радианах |
+
+### TaskPayload
+
+```json
+{
+  "type": "play_sequence",
+  "params": {"name": "wave_hand", "side": "left"},
+  "ts": 1710000000.0
+}
+```
+
+| Поле | Тип | Описание |
+|------|-----|----------|
+| `type` | string | Тип задачи: `idle`, `reset`, `play_sequence` |
+| `params` | object | Параметры задачи (зависят от типа). Опционально. |
+| `ts` | float | Unix timestamp отправителя |
+
+**Типы задач Phase 0:**
+
+| type | params | Описание |
+|------|--------|----------|
+| `idle` | — | Стоять, не двигаться |
+| `reset` | — | Сбросить в T-позу (все серво 90°) |
+| `play_sequence` | `{"name": str}` | Выполнить именованную последовательность |
 
 ### WorldStatePayload
 
