@@ -14,6 +14,7 @@
 | v3.0 | 2026-03-16 | Zenoh+UDP вместо MQTT | архив |
 | v3.1 | 2026-03-16 | Полный Zenoh, убран UDP и Robot Gateway | архив |
 | v3.2 | 2026-03-16 | Tauri 2.0 вместо FastAPI dashboard, UI слой, голосовые сценарии | черновик |
+| v3.3 | 2026-03-17 | swarm/task/{id} — адресная раздача задач агентам (ADR: Вариант B) | черновик |
 
 ---
 
@@ -72,15 +73,17 @@ ZenohPico --> ZenohRouter : robot/{id}/state 2Гц
 ### Слой 2 — Swarm Coordinator
 
 - Python asyncio, цикл: **5 сек**
-- Публикует: `swarm/world_state`
-- Получает: `swarm/events`
+- Публикует: `swarm/world_state`, `swarm/task/{id}` (по событию)
+- Получает: `swarm/events`, `ui/voice_cmd`
+- Раздача задач агентам: топик `swarm/task/{id}` — адресно, событийно, Reliable QoS
+- Масштабирование: O(N) трафик — агент подписан только на свой топик
 
 ### Слой 3 — Robot Agents ×N
 
 - Один процесс = один агент = один робот
 - Цикл решений: **1 сек**
-- Подписка: `robot/{id}/state`, `swarm/world_state`
-- Публикация: `robot/{id}/cmd`
+- Подписка: `robot/{id}/state`, `swarm/world_state`, `swarm/task/{id}`
+- Публикация: `robot/{id}/cmd`, `swarm/events`
 - LLM translates high-level intent → детерминированные параметры команды
 
 ### Слой 4 — Transport Layer
@@ -92,6 +95,7 @@ ZenohPico --> ZenohRouter : robot/{id}/state 2Гц
 | `robot/{id}/cmd` | Агент → Pico | RealTime + Drop | по решению |
 | `robot/{id}/state` | Pico → Агент | BestEffort | 2 Гц |
 | `swarm/world_state` | Координатор → все | Reliable | 0.2 Гц |
+| `swarm/task/{id}` | Координатор → Агент | Reliable | по событию |
 | `swarm/events` | любой → Координатор | Reliable | по событию |
 | `ui/voice_cmd` | Tauri → Coordinator | Reliable | по событию |
 | `ui/status` | Coordinator → Tauri | BestEffort | 1 Гц |
