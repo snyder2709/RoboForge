@@ -28,6 +28,7 @@ UI: **Tauri 2.0** — Desktop (Brain PC) + Mobile (iOS/Android), монореп�
 | Desktop UI | Tauri 2.0 Desktop (Rust + WebUI) |
 | Mobile UI | Tauri 2.0 Mobile (iOS / Android) |
 | Монорепо | pnpm workspaces (apps/desktop, apps/mobile, packages/ui) |
+| Frontend WebUI | Nuxt 4 (Vue 3 + Vite) — шаблон готов |
 
 ## Шаг 1 — Инфраструктура
 
@@ -118,7 +119,7 @@ apps/
   desktop/   # Tauri 2.0 Desktop (Brain PC)
   mobile/    # Tauri 2.0 Mobile (iOS / Android)
 packages/
-  ui/        # Shared компоненты (React / Svelte)
+  ui/        # Shared Nuxt 4 компоненты (Vue 3)
   zenoh-ipc/ # Tauri plugin: Zenoh ↔ WebView bridge
 
 # Запуск Desktop (dev)

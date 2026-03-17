@@ -162,7 +162,8 @@ Tauri: "Робот 1 выполняет: движение к точке A"
 ### Открытые вопросы UI
 
 - [x] ~~FastAPI Dashboard vs Tauri~~ → **решено: Tauri 2.0, монорепо, Desktop + Mobile** (2026-03-17)
-- [ ] STT на устройстве (offline) vs облако — выбор движка (Q-03)
+- [x] ~~Frontend фреймворк~~ → **решено: Nuxt 4 (Vue 3), шаблон готов** (2026-03-17)
+- [ ] STT движок — offline Whisper.cpp vs облако (Q-03, см. исследование)
 - [ ] Формат голосовых команд — свободная речь vs ключевые слова (Q-14)
 - [ ] Визуализация 3D состояния робота в UI — нужна ли на старте? (Q-12)
 - [ ] Аутентификация мобильного клиента (Q-13)
@@ -179,6 +180,7 @@ Tauri: "Робот 1 выполняет: движение к точке A"
 | Desktop UI | Tauri 2.0 (Rust + WebUI) |
 | Mobile UI | Tauri 2.0 (iOS / Android) |
 | Монорепо | pnpm workspaces (apps/desktop, apps/mobile, packages/ui, packages/zenoh-ipc) |
+| Frontend WebUI | Nuxt 4 (Vue 3 + Vite) — шаблон готов |
 | Симулятор | Webots R2023b+ |
 | Pico 2W runtime | C/FreeRTOS |
 | Pico 2W транспорт | zenoh-pico |
