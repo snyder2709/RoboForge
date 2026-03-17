@@ -113,6 +113,17 @@ ZenohPico --> ZenohRouter : robot/{id}/state 2Гц
 | Desktop (Brain PC) | Tauri 2.0 + Rust backend | Мониторинг, конфигурация, сценарии |
 | Mobile (iOS/Android) | Tauri 2.0 | Голосовые команды, быстрые действия, статус |
 
+**Монорепо — структура:**
+
+```
+apps/
+  desktop/      # Tauri 2.0 Desktop (Brain PC)
+  mobile/       # Tauri 2.0 Mobile (iOS / Android)
+packages/
+  ui/           # Shared React/Svelte компоненты
+  zenoh-ipc/    # Tauri plugin: Zenoh ↔ WebView bridge (Rust)
+```
+
 **Rust backend Tauri отвечает за:**
 - Zenoh pub/sub (нативный eclipse-zenoh Rust)
 - Ollama HTTP API клиент
@@ -150,10 +161,12 @@ Tauri: "Робот 1 выполняет: движение к точке A"
 
 ### Открытые вопросы UI
 
-- [ ] STT на устройстве (offline) vs облако — выбор движка
-- [ ] Формат голосовых команд — свободная речь vs ключевые слова
-- [ ] Визуализация 3D состояния робота в UI — нужна ли?
-- [ ] Аутентификация мобильного клиента
+- [x] ~~FastAPI Dashboard vs Tauri~~ → **решено: Tauri 2.0, монорепо, Desktop + Mobile** (2026-03-17)
+- [x] ~~Frontend фреймворк~~ → **решено: Nuxt 4 (Vue 3), шаблон готов** (2026-03-17)
+- [x] ~~STT движок~~ → **whisper.cpp + large-v3-russian + CUDA** (2026-03-17). Brain PC RTX 3050 6GB: ~3GB VRAM, latency ~0.3-0.5с/фраза.
+- [ ] Формат голосовых команд — свободная речь vs ключевые слова (Q-14)
+- [ ] Визуализация 3D состояния робота в UI — нужна ли на старте? (Q-12)
+- [ ] Аутентификация мобильного клиента (Q-13)
 
 ---
 
@@ -166,6 +179,8 @@ Tauri: "Робот 1 выполняет: движение к точке A"
 | LLM runtime | Ollama + Phi-3 Mini |
 | Desktop UI | Tauri 2.0 (Rust + WebUI) |
 | Mobile UI | Tauri 2.0 (iOS / Android) |
+| Монорепо | pnpm workspaces (apps/desktop, apps/mobile, packages/ui, packages/zenoh-ipc) |
+| Frontend WebUI | Nuxt 4 (Vue 3 + Vite) — шаблон готов |
 | Симулятор | Webots R2023b+ |
 | Pico 2W runtime | C/FreeRTOS |
 | Pico 2W транспорт | zenoh-pico |
@@ -228,6 +243,6 @@ Servo Task (50 Гц, RT)    → IK → PCA9685 I2C → 20 серво
 
 - [[../index|HLD Навигатор]]
 - [[../hardware/hld_hardware_v1_2|HLD Железо v1.2]]
-- [[../phases/hld_phase1_v1_1|HLD Фаза 1 v1.1]]
+- [[../phases/hld_phase1_v1_1|HLD Фаза 1 v1.2]]
 - [[../../research/robot-network-architecture/artefacts/architectures/zenoh_distributed_architecture|Распределённая архитектура Zenoh]]
 - [[../../research/robot-hardware-research/index|Исследование: Hardware решения]]
