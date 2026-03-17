@@ -22,9 +22,16 @@ services/
 ├── README.md              ← этот файл
 ├── start.sh               ← запуск всех Phase 0 сервисов
 ├── .venv/                 ← shared Python venv (git-ignored)
+├── .bin/
+│   └── zenohd.exe         ← Zenoh Router binary (git-ignored)
 ├── virtual_robot/
 │   ├── virtual_robot.py
 │   └── requirements.txt
+├── tools/
+│   ├── ui_server.py       ← Dev UI: HTTP + WebSocket bridge к Zenoh
+│   ├── index.html         ← Three.js монитор роботов
+│   ├── requirements.txt   ← websockets>=12.0
+│   └── zenoh_cli.py       ← CLI утилита для ручного тестирования
 ├── coordinator/           ← TODO Phase 0
 └── agents/                ← TODO Phase 0
 ```
@@ -53,12 +60,46 @@ services/
 ROBOT_COUNT=2 ./services/start.sh
 
 # Ручной запуск одного робота
-source services/.venv/bin/activate
+source services/.venv/Scripts/activate
 python services/virtual_robot/virtual_robot.py 1
+```
 
-# Мониторинг топиков (отдельный терминал)
-z_sub -k "robot/**"
-z_sub -k "swarm/**"
+## Dev UI
+
+```bash
+# Запускается автоматически вместе с start.sh
+./services/start.sh
+
+# Открыть в браузере
+# http://localhost:8765
+```
+
+Показывает 4 панели роботов с 3D-гуманоидом (Three.js), servo-барами и кнопками управления.
+Можно запустить отдельно:
+```bash
+.venv/Scripts/python tools/ui_server.py
+```
+
+## Тестирование
+
+```bash
+# Активировать venv
+source services/.venv/Scripts/activate
+
+# Слушать все топики роботов (в отдельном терминале)
+python services/tools/zenoh_cli.py sub "robot/**"
+
+# Слушать конкретного робота
+python services/tools/zenoh_cli.py sub "robot/1/state"
+
+# Отправить команду stop роботу 1
+python services/tools/zenoh_cli.py put "robot/1/cmd" '{"action":"stop","ts":0}'
+
+# Сброс в начальное положение
+python services/tools/zenoh_cli.py put "robot/1/cmd" '{"action":"reset","ts":0}'
+
+# Двинуть все сервоприводы в 45°
+python services/tools/zenoh_cli.py put "robot/1/cmd" '{"action":"move_servos","servos":[45,45,45,45,45,45,45,45,45,45,45,45,45,45,45,45,45,45,45,45],"ts":0}'
 ```
 
 ## API — Zenoh топики

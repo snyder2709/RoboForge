@@ -7,6 +7,12 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROBOT_COUNT="${ROBOT_COUNT:-4}"
 VENV="$SCRIPT_DIR/.venv"
+# Windows venv uses Scripts/, Unix uses bin/
+if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" || "$OSTYPE" == "win32" ]]; then
+    VENV_BIN="$VENV/Scripts"
+else
+    VENV_BIN="$VENV/bin"
+fi
 PIDS=()
 ZENOHD_PID=""
 
@@ -32,10 +38,12 @@ trap cleanup EXIT INT TERM
 ZENOHD=""
 if command -v zenohd &>/dev/null; then
     ZENOHD="zenohd"
-elif [[ -x "$SCRIPT_DIR/../bin/zenohd" ]]; then
-    ZENOHD="$SCRIPT_DIR/../bin/zenohd"
+elif [[ -x "$SCRIPT_DIR/.bin/zenohd" ]]; then
+    ZENOHD="$SCRIPT_DIR/.bin/zenohd"
+elif [[ -x "$SCRIPT_DIR/.bin/zenohd.exe" ]]; then
+    ZENOHD="$SCRIPT_DIR/.bin/zenohd.exe"
 else
-    die "zenohd not found. Add to PATH or place at bin/zenohd.
+    die "zenohd not found. Add to PATH or place at services/.bin/zenohd.exe.
 Download: https://github.com/eclipse-zenoh/zenoh/releases"
 fi
 
@@ -53,17 +61,25 @@ if [[ ! -d "$VENV" ]]; then
 fi
 
 log "installing requirements..."
-"$VENV/bin/pip" install -q -r "$SCRIPT_DIR/virtual_robot/requirements.txt"
+"$VENV_BIN/pip" install -q -r "$SCRIPT_DIR/virtual_robot/requirements.txt"
+"$VENV_BIN/pip" install -q -r "$SCRIPT_DIR/tools/requirements.txt"
 
 # ── virtual robots ────────────────────────────────────────────────────────────
 hr
 log "starting $ROBOT_COUNT virtual robot(s)..."
 for i in $(seq 1 "$ROBOT_COUNT"); do
-    "$VENV/bin/python" "$SCRIPT_DIR/virtual_robot/virtual_robot.py" "$i" &
+    "$VENV_BIN/python" "$SCRIPT_DIR/virtual_robot/virtual_robot.py" "$i" &
     pid=$!
     PIDS+=("$pid")
     log "  robot id=$i  pid=$pid  state=robot/$i/state  cmd=robot/$i/cmd"
 done
+
+# ── dev UI ────────────────────────────────────────────────────────────────────
+"$VENV_BIN/python" "$SCRIPT_DIR/tools/ui_server.py" &
+pid=$!
+PIDS+=("$pid")
+log "  ui ws  pid=$pid  ws://localhost:8766"
+log "  ui app : cd services/tools/ui && npm run dev"
 
 # ── coordinator / agents (добавить здесь когда будут готовы) ──────────────────
 # log "starting swarm_coordinator..."
@@ -73,6 +89,7 @@ done
 hr
 log "all Phase 0 services running."
 log "  robots : $ROBOT_COUNT"
+log "  ui     : http://localhost:8765"
 log "  monitor: z_sub -k 'robot/**'"
 log "  stop   : Ctrl+C"
 hr
