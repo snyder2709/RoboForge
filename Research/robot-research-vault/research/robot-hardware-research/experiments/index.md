@@ -11,6 +11,7 @@ _Пока пусто. Используйте [[../../../templates/experiment_tem
 | ID | Название | Статус |
 |----|----------|--------|
 | [[EXP-005_raspi2_servo_bench_test\|EXP-005]] | Стендовый тест сервоприводов на Raspberry Pi 2 B+ | 🟡 Запланирован |
+| [[EXP-006_hardware_in_the_loop\|EXP-006]] | Hardware-in-the-Loop: Zenoh + физические сервы + Webots синхронно | 🟡 Запланирован |
 
 ## Запланированные (без файла)
 

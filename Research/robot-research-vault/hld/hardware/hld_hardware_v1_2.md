@@ -168,6 +168,7 @@ DC-DC DC-DC DC-DC
 - [ ] Валидация cyw43 Wi-Fi на Pico 2W для zenoh-pico (EXP-002)
 - [ ] Измерить реальное потребление Pico 2W при управлении 2× PCA9685 (EXP-001)
 - [ ] [[../../research/robot-hardware-research/experiments/EXP-005_raspi2_servo_bench_test|EXP-005]]: Стендовый тест MG90S + GDW DS041MG на Raspberry Pi 2 B+ — запланирован
+- [ ] [[../../research/robot-hardware-research/experiments/EXP-006_hardware_in_the_loop|EXP-006]]: Hardware-in-the-Loop — Zenoh + физические сервы + Webots синхронно — запланирован
 
 ## Связанные документы
 
