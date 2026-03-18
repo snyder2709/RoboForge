@@ -8,21 +8,30 @@
         <span class="version">v{{ version }}</span>
       </header>
 
-      <div class="grid">
-        <RobotPanel v-for="id in robotIds" :key="id" :robot-id="id" />
-      </div>
+      <n-tabs v-model:value="activeTab" type="line" class="tabs">
+        <n-tab-pane name="phase0" tab="Phase 0 — Virtual">
+          <div class="grid">
+            <RobotPanel v-for="id in robotIds" :key="id" :robot-id="id" />
+          </div>
+        </n-tab-pane>
+        <n-tab-pane name="phase1" tab="Phase 1 — Webots">
+          <WebotsPanel />
+        </n-tab-pane>
+      </n-tabs>
     </div>
   </n-config-provider>
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { NConfigProvider, NGlobalStyle, NTag, darkTheme } from 'naive-ui'
+import { ref, computed } from 'vue'
+import { NConfigProvider, NGlobalStyle, NTag, NTabs, NTabPane, darkTheme } from 'naive-ui'
 import RobotPanel from './components/RobotPanel.vue'
+import WebotsPanel from './components/WebotsPanel.vue'
 import { wsStatus } from './services/wsService'
 import { version } from '../package.json'
 
 const robotIds = [1, 2, 3, 4]
+const activeTab = ref('phase0')
 
 const themeOverrides = {
   common: {
@@ -63,6 +72,10 @@ body { background: #0a0a12; font-family: 'Courier New', monospace; }
 }
 
 .version { color: #334; font-size: 11px; margin-left: auto; }
+
+.tabs {
+  padding: 0 10px;
+}
 
 .grid {
   display: grid;

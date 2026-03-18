@@ -221,7 +221,9 @@ Servo Task (50 Гц, RT)    → IK → PCA9685 I2C → 20 серво
 |-----------|-----------|
 | `z_sub -k "robot/**"` | Live просмотр всех Zenoh топиков |
 | `z_scout` | Обнаружение участников сети |
-| Tauri Desktop UI | Визуализация состояния роботов |
+| `services/tools/ui` (Vue 3) | Phase 0: 4 виртуальных робота; Phase 1: Webots named-joint слайдеры |
+| `services/tools/ui_server.py` | WebSocket↔Zenoh мост, авто-парсинг URDF joint limits |
+| Tauri Desktop UI | Визуализация состояния роботов (TODO) |
 | JTAG + OpenOCD | Дебаг Pico 2W / ESP32 |
 | Ollama logs | Решения LLM |
 
@@ -235,7 +237,8 @@ Servo Task (50 Гц, RT)    → IK → PCA9685 I2C → 20 серво
 | Zenoh топики + QoS        | 90%        | Конфиг роя N > 4             |
 | UI слой (Tauri)           | 30%        | Не реализован, STT не выбран |
 | Phase 0 Virtual Robot     | 85%        | Обновить под eclipse-zenoh   |
-| Phase 1 Webots            | 75%        | URDF нет                     |
+| Phase 1 Webots            | 88%        | URDF качество (placeholder → production) |
+| Debug UI (Phase 0/1)      | 90%        | —                            |
 | Pico 2W C/FreeRTOS скелет | 50%        | Код не написан               |
 | IK (обратная кинематика)  | 30%        | Алгоритм не выбран           |
 

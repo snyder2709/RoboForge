@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -m urdf2webots.importer --help)",
+      "Bash(mkdir -p \"d:/Docs/Projects/My/RoboForge/simulation/protos\")",
+      "Bash(python -m urdf2webots.importer --input \"d:/Docs/Projects/My/RoboForge/Research/robot-research-vault/research/robot-hardware-research/artefacts/urdf/humanoid_v1.urdf\" --output \"d:/Docs/Projects/My/RoboForge/simulation/protos/RoboforgeHumanoid.proto\" --robot-name RoboforgeHumanoid --target R2025a --box-collision)",
+      "Bash(python -m urdf2webots.importer --input \"D:\\\\Docs\\\\Projects\\\\My\\\\RoboForge\\\\Research\\\\robot-research-vault\\\\research\\\\robot-hardware-research\\\\artefacts\\\\urdf\\\\humanoid_v1.urdf\" --output \"D:\\\\Docs\\\\Projects\\\\My\\\\RoboForge\\\\simulation\\\\protos\\\\RoboforgeHumanoid.proto\" --robot-name RoboforgeHumanoid --target R2025a --box-collision)",
+      "Bash(python -c \":*)",
+      "Bash(find 'C:/Program Files/Webots' -name python*.exe)",
+      "Bash(find 'C:/Program Files/Webots' -name *.exe)",
+      "Bash(\"C:/Python314/python.exe\" -m pip install eclipse-zenoh)",
+      "Bash(\"C:/Python314/python.exe\" -c \"import zenoh; print\\(''zenoh OK:'', zenoh.__version__\\)\")",
+      "Bash(\"C:/Python314/python.exe\" -c \"import zenoh; s = zenoh.open\\(zenoh.Config\\(\\)\\); s.close\\(\\); print\\(''zenoh works''\\)\")",
+      "Bash(powershell -Command \"Get-ChildItem -Path ''C:\\\\Users\\\\work'' -Recurse -Filter ''styles-audit.md'' -ErrorAction SilentlyContinue | Select-Object FullName\")",
+      "Bash(.venv/Scripts/pip list:*)"
+    ]
+  }
+}

@@ -11,7 +11,8 @@ UI: **Tauri 2.0** — Desktop (Brain PC) + Mobile (iOS/Android), монореп�
 | v1.0 | — | MQTT транспорт | архив |
 | v1.1 | 2026-03-16 | Zenoh+UDP, Robot Gateway | архив |
 | v1.2 | 2026-03-16 | Полный Zenoh, Robot Gateway убран | архив |
-| v1.3 | 2026-03-17 | Tauri 2.0 вместо FastAPI Dashboard, монорепо | черновик |
+| v1.3 | 2026-03-17 | Tauri 2.0 вместо FastAPI Dashboard, монорепо | архив |
+| v1.4 | 2026-03-18 | Webots интеграция завершена, Debug UI Phase 0/1 | черновик |
 
 ## Зависимости
 
@@ -134,26 +135,34 @@ cd apps/desktop && cargo tauri dev
 z_sub -k "robot/**"   # CLI вместо UI на старте
 ```
 
-## Шаг 5 — Webots (Phase 1b)
+## Шаг 5 — Webots (Phase 1b) ✅
 
-Контроллер Webots подписывается на `robot/{id}/cmd` через eclipse-zenoh — напрямую, без промежуточных компонентов.
+Контроллер Webots подписывается на `robot/joints` через eclipse-zenoh и публикует обратно состояние в `robot/state`.
+
+**Топики Phase 1:**
+- `robot/joints` ← `{"joint_name": angle_rad, ...}` (команды)
+- `robot/state` → `{"joint_name": angle_rad, ...}` (состояние)
 
 ```python
-# webots_controller.py (фрагмент)
-import zenoh
+# roboforge_controller.py (фрагмент)
+import zenoh, json
 from controller import Robot
 
 robot = Robot()
 session = zenoh.open(zenoh.Config())
+target_positions = {}
 
 def on_cmd(sample):
-    cmd = json.loads(bytes(sample.payload))
-    apply_to_webots_motors(robot, cmd)
+    target_positions.update(json.loads(bytes(sample.payload)))
 
-session.declare_subscriber("robot/1/cmd", on_cmd)
+session.declare_subscriber("robot/joints", on_cmd)
+pub = session.declare_publisher("robot/state")
 ```
 
-Блокер: **URDF 28-30 см гуманоида** — нет файла.
+**URDF статус:** `humanoid_v1.urdf` — 15 суставов, placeholder (box-геометрия).
+Блокер: **качество URDF** — нужен production-ready файл с mesh, inertia, точными пропорциями перед интеграцией IK и LLM.
+
+**Debug UI (Phase 1):** `services/tools/ui` — вкладка "Phase 1 — Webots" с named-joint слайдерами, авто-парсинг joint limits из URDF при старте `ui_server.py`.
 
 ## Порядок запуска
 
@@ -183,9 +192,11 @@ cd apps/desktop && cargo tauri dev
 | Агенты / Координатор | 90% | Заменить paho → zenoh |
 | Tauri Desktop UI | 15% | Монорепо не инициализировано (шаблон Nuxt 4 готов) |
 | Tauri Mobile UI | 5% | Монорепо не инициализировано |
-| Webots | 70% | URDF нет |
+| Webots контроллер + PROTO | 90% | — |
+| Debug UI (Phase 0 + Phase 1) | 90% | — |
+| URDF качество | 20% | Placeholder, нужен production URDF с mesh + inertia |
 
-**Общая готовность: ~82%**
+**Общая готовность: ~85%**
 
 ## Связанные документы
 

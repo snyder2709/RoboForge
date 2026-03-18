@@ -42,7 +42,7 @@
 | Фаза | Статус | Что нужно |
 |------|--------|----------|
 | Phase 0 — виртуальные роботы | **🟡 Q-01: virtual_robot.py готов** | coordinator + agents (TODO) |
-| Phase 1 — Webots | **🟡 simulation/ готов** | URDF импорт в Webots, coordinator |
+| Phase 1 — Webots | **🟢 контроллер + debug UI работают** | URDF качество (placeholder → production mesh) |
 | Phase 2 — реальный робот | ~4-8 нед после Phase 1 | Закупка ~$134/робот, 3D-печать, IK |
 
 ### HLD навигатор
