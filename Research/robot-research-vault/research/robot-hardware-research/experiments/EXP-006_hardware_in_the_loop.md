@@ -134,5 +134,6 @@ python3 raspi_controller.py
 ## Связанные документы
 
 - [[EXP-005_raspi2_servo_bench_test|EXP-005]] — предварительный тест сервов
+- [[../artefacts/diagrams/exp006_hardware_in_the_loop_wiring|Схема подключения (PlantUML)]]
 - [[../../../../hld/hardware/hld_hardware_v1_2|HLD Железо v1.3]]
 - [[../../../../hld/phases/hld_phase1_v1_1|HLD Фаза 1 v1.4]]

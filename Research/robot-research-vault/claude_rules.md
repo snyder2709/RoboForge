@@ -49,6 +49,37 @@ BrainPC --> Robot
 "Brain PC" --> Robot
 ```
 
+## Схемы подключения (Hardware Wiring)
+
+- **Обязательно** создавать PlantUML-диаграмму для любой схемы подключения железа
+- Тип диаграммы: `component` или `deployment`
+- Файл: `artefacts/diagrams/{имя}.md` в соответствующем research-разделе
+- После создания: обновить `artefacts/index.md` и добавить ссылку в эксперимент/HLD
+- Содержимое диаграммы:
+  - Физические устройства — `node`
+  - Модули/платы — `component`
+  - Шины и протоколы — `interface` или подпись на стрелке
+  - Питание отображать отдельным цветом или меткой `[power]`
+  - Указывать номера пинов / каналов на стрелках
+
+```
+' Пример wiring-диаграммы:
+@startuml
+node "Raspberry Pi 2 B+" as RPi {
+  interface "I2C (SDA/SCL)" as I2C
+  interface "3.3V / GND" as PWR33
+}
+node "PCA9685" as PCA {
+  component "CH0..CH15" as Channels
+}
+node "MG90S Servo" as Servo
+
+RPi -down-> PCA : I2C
+PWR33 --> PCA : VCC [power]
+PCA --> Servo : PWM CH0
+@enduml
+```
+
 ## Структура vault
 
 ```

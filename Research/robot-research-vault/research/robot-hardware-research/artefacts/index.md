@@ -16,7 +16,7 @@
 
 ## Диаграммы
 
-- `diagrams/hardware_architecture` — запланировано
+- [[diagrams/exp006_hardware_in_the_loop_wiring|EXP-006 Wiring — RPi + PCA9685 + Zenoh сеть]]
 
 ## Связанные документы
 
