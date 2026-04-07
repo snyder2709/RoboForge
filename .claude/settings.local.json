@@ -12,7 +12,8 @@
       "Bash(\"C:/Python314/python.exe\" -c \"import zenoh; print\\(''zenoh OK:'', zenoh.__version__\\)\")",
       "Bash(\"C:/Python314/python.exe\" -c \"import zenoh; s = zenoh.open\\(zenoh.Config\\(\\)\\); s.close\\(\\); print\\(''zenoh works''\\)\")",
       "Bash(powershell -Command \"Get-ChildItem -Path ''C:\\\\Users\\\\work'' -Recurse -Filter ''styles-audit.md'' -ErrorAction SilentlyContinue | Select-Object FullName\")",
-      "Bash(.venv/Scripts/pip list:*)"
+      "Bash(.venv/Scripts/pip list:*)",
+      "WebSearch"
     ]
   }
 }
