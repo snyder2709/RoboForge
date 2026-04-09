@@ -142,10 +142,10 @@ pca.deinit()
 ## Следующий шаг после успеха
 
 Перейти к EXP-006 (hardware-in-the-loop с Webots).
-Заказать полный комплект: 11× MG996R + 9× SG92R + Pico 2W + 2× PCA9685.
+Заказать полный комплект: 12× MG996R + 10× SG92R + Pico 2W + 2× PCA9685.
 
 ## Связанные документы
 
 - [[../index|Исследование: Hardware]]
 - [[../../decisions/index|Принятые решения]]
-- [[../../../../hld/hardware/hld_hardware_v1_2|HLD Железо v1.3]]
+- [[../../../../hld/hardware/hld_hardware_v1_2|HLD Железо v1.4]]
