@@ -61,12 +61,12 @@ node "PCA9685 PWM Driver" as PCA {
   component "CH6..CH9\n(ноги)" as CHLegs
 }
 
-node "USB 5V 2A\n(внешний)" as USB5V {
+node "DC БП 5V 3A\n(внешний)" as USB5V {
   component "+ / -" as USBPins
 }
 
-node "MG90S ×6\n(руки)" as Arms
-node "GDW DS041MG ×4\n(ноги)" as Legs
+node "SG92R ×6\n(руки)" as Arms
+node "MG996R ×4\n(ноги)" as Legs
 
 P33  --> PVCC  : 3.3V [logic power]
 PGND --> PGND2 : GND
@@ -96,13 +96,13 @@ end note
 
 | Joint | Тип | CH | Диапазон | Центр (0 rad) |
 |-------|-----|----|----------|---------------|
-| left_shoulder_pitch | MG90S | 0 | 0–180° | 90° |
-| left_elbow_pitch | MG90S | 1 | 0–180° | 90° |
-| left_wrist_pitch | MG90S | 2 | 0–180° | 90° |
-| right_shoulder_pitch | MG90S | 3 | 0–180° | 90° |
-| right_elbow_pitch | MG90S | 4 | 0–180° | 90° |
-| right_wrist_pitch | MG90S | 5 | 0–180° | 90° |
-| left_hip_pitch | GDW DS041MG | 6 | 0–180° | 90° |
-| left_knee_pitch | GDW DS041MG | 7 | 90–180° | 90° |
-| right_hip_pitch | GDW DS041MG | 8 | 0–180° | 90° |
-| right_knee_pitch | GDW DS041MG | 9 | 90–180° | 90° |
+| left_shoulder_pitch | SG92R | 0 | 0–180° | 90° |
+| left_elbow_pitch | SG92R | 1 | 0–180° | 90° |
+| left_wrist_pitch | SG92R | 2 | 0–180° | 90° |
+| right_shoulder_pitch | SG92R | 3 | 0–180° | 90° |
+| right_elbow_pitch | SG92R | 4 | 0–180° | 90° |
+| right_wrist_pitch | SG92R | 5 | 0–180° | 90° |
+| left_hip_pitch | MG996R | 6 | 0–180° | 90° |
+| left_knee_pitch | MG996R | 7 | 90–180° | 90° |
+| right_hip_pitch | MG996R | 8 | 0–180° | 90° |
+| right_knee_pitch | MG996R | 9 | 90–180° | 90° |
