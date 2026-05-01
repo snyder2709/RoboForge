@@ -1,351 +1,359 @@
 <?xml version="1.0"?>
 <!--
-  Гуманоидная платформа RoboForge v2
-  Высота: ~28 см | DOF: 21 | Серво: 12× MG996R + 10× SG92R
-  Контроллер: RP2350 Pico 2W
-  Расширитель PWM: 2× PCA9685
-  Камера: OV2640 (голова)
-  Дата: 2026-04-08
+  RoboForge Humanoid v2 — полная кинематическая модель
+  Соответствует HLD Железо v1.4 (2026-04-08)
 
-  Исправлено относительно v1:
-  - Добавлены hip_roll ×2, ankle_roll ×2 (критично для ходьбы)
-  - Добавлены shoulder_roll ×2
-  - Добавлен head_tilt
-  - Исправлен <collision> для hip-звеньев
-  - Исправлен rpy плечевых суставов (убран из origin)
-  - Пересчитана inertia из реальных масс и геометрии
-  - DOF: 15 → 21
+  20 DOF (кисти — fixed-joint крюк, серво нет; голова пассивна):
+    Голова      2  head_pan, head_tilt                       SG92R ×2  (пассивные)
+    Плечи       4  {l,r}_shoulder_pitch, {l,r}_shoulder_roll SG92R ×4
+    Локти       2  {l,r}_elbow_pitch                         SG92R ×2
+    Кисти       —  {l,r}_wrist_pitch = fixed (крюк/заглушка, серво нет)
+    Бёдра       6  {l,r}_hip_yaw, {l,r}_hip_roll, {l,r}_hip_pitch  MG996R ×6
+    Колени      2  {l,r}_knee_pitch                          MG996R ×2
+    Голеностопы 4  {l,r}_ankle_pitch, {l,r}_ankle_roll       MG996R ×4
+
+  Оси суставов (конвенция: X=медиолатерально, Y=вперёд-назад, Z=вверх):
+    _pitch  → axis X  (сагиттальная плоскость)
+    _roll   → axis Y  (фронтальная плоскость)
+    _yaw    → axis Z  (горизонтальная плоскость)
+
+  Серво параметры:
+    SG92R  : effort 0.245 N·m, velocity 5.5 rad/s, ~9 г
+    MG996R : effort 0.980 N·m, velocity 3.14 rad/s, ~55 г
+
+  Цепочка ног (от центра торса вниз):
+    hip_yaw(-0.065) → hip_roll(-0.030) → [upper_leg origin](-0.020)
+    → knee_pitch(-0.060) → ankle_pitch(-0.060)
+    → [ankle_pitch_link origin] → ankle_roll(-0.005) → foot
+    Итого: 0.240 м от центра торса до подошвы стопы.
+
+  TODO_DOCS: Следующие документы нужно обновить после этого URDF:
+    1. EXP-006 (experiments/EXP-006_hardware_in_the_loop.md):
+       — Таблица маппинга суставов→каналы PCA9685 содержит только 10 суставов.
+         Нужно добавить 12 новых: shoulder_pitch×2, shoulder_roll×2, elbow_pitch×2,
+         wrist_pitch×2, ankle_roll×2, hip_roll×2.
+         Потребуется 2-й PCA9685 (уже запланирован в HLD электроника).
+    2. HLD Железо v1.4 (hld/hardware/hld_hardware_v1_2.md):
+       — Строка «DOF: 21» vs сумма таблицы (22) — уточнить счёт.
+       — Строка «Вес 350–450 г» занижена: 12×MG996R(55г)+10×SG92R(9г)+структура ≈ 1 кг.
+    3. roboforge_constants.py (unitree_rl_mjlab/src/assets/robots/roboforge/):
+       — Добавить ankle_roll в ROBOFORGE_LEG_ACTUATOR (target_names_expr).
+       — Добавить отдельный ROBOFORGE_ARM_ACTUATOR (SG92R) для плеч/локтей/кистей.
+       — Обновить HOME_KEYFRAME pos Z 0.26 → 0.265 (ankle_pitch_link +5 мм).
 -->
 <robot name="roboforge_humanoid_v2">
 
-  <!-- ═══════════════════════════════════════════════
-       ТОРС (base)
-       0.06 × 0.04 × 0.08 м | масса 0.120 кг
-  ═══════════════════════════════════════════════ -->
+  <!-- ═══════════════════════════════════════════════════════════════════
+       ТОРС (корневое звено)
+       60×40×120 мм, 250 г (структура + плата Pico 2W + проводка)
+       ═══════════════════════════════════════════════════════════════════ -->
   <link name="torso">
     <visual>
-      <geometry><box size="0.06 0.04 0.08"/></geometry>
+      <geometry><box size="0.06 0.04 0.12"/></geometry>
       <material name="body_blue"><color rgba="0.18 0.27 0.47 1.0"/></material>
     </visual>
     <collision>
-      <geometry><box size="0.06 0.04 0.08"/></geometry>
+      <geometry><box size="0.06 0.04 0.12"/></geometry>
     </collision>
     <inertial>
-      <mass value="0.120"/>
-      <!-- box: ixx=(m/12)*(y²+z²) -->
-      <inertia ixx="0.000107" ixy="0" ixz="0"
-               iyy="0.000120" iyz="0" izz="0.000060"/>
+      <mass value="0.250"/>
+      <!-- box: Ixx=(1/12)m(y²+z²), Iyy=(1/12)m(x²+z²), Izz=(1/12)m(x²+y²) -->
+      <inertia ixx="0.0004" ixy="0" ixz="0" iyy="0.0005" iyz="0" izz="0.0001"/>
     </inertial>
   </link>
 
-  <!-- ═══════════════════════════════════════════════
-       ГОЛОВА — head_pan + head_tilt
-  ═══════════════════════════════════════════════ -->
+  <!-- ═══════════════════════════════════════════════════════════════════
+       ГОЛОВА   (SG92R ×2: head_pan / head_tilt)
+       ═══════════════════════════════════════════════════════════════════ -->
   <link name="head_yaw_link">
     <inertial>
-      <mass value="0.005"/>
-      <inertia ixx="0.0000001" ixy="0" ixz="0"
-               iyy="0.0000001" iyz="0" izz="0.0000001"/>
+      <mass value="0.009"/>
+      <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001"/>
     </inertial>
   </link>
 
   <joint name="head_pan" type="revolute">
     <parent link="torso"/>
     <child link="head_yaw_link"/>
-    <origin xyz="0 0 0.06" rpy="0 0 0"/>
+    <origin xyz="0 0 0.07" rpy="0 0 0"/>
     <axis xyz="0 0 1"/>
-    <limit lower="-1.047" upper="1.047" effort="0.196" velocity="3.14"/>
+    <limit lower="-1.047" upper="1.047" effort="0.245" velocity="5.5"/>
   </joint>
 
   <link name="head">
     <visual>
       <geometry><box size="0.04 0.035 0.04"/></geometry>
-      <material name="body_blue"/>
+      <material name="head_grey"><color rgba="0.60 0.60 0.65 1.0"/></material>
     </visual>
     <collision>
       <geometry><box size="0.04 0.035 0.04"/></geometry>
     </collision>
     <inertial>
-      <mass value="0.030"/>
-      <inertia ixx="0.000006" ixy="0" ixz="0"
-               iyy="0.000007" iyz="0" izz="0.000005"/>
+      <mass value="0.050"/>
+      <inertia ixx="0.0000120" ixy="0" ixz="0" iyy="0.0000133" iyz="0" izz="0.0000120"/>
     </inertial>
   </link>
 
   <joint name="head_tilt" type="revolute">
     <parent link="head_yaw_link"/>
     <child link="head"/>
-    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <origin xyz="0 0 0.025" rpy="0 0 0"/>
     <axis xyz="1 0 0"/>
-    <limit lower="-0.524" upper="0.524" effort="0.196" velocity="3.14"/>
+    <limit lower="-0.524" upper="0.524" effort="0.245" velocity="5.5"/>
   </joint>
 
-  <link name="camera_link">
-    <visual>
-      <geometry><box size="0.025 0.025 0.02"/></geometry>
-      <material name="camera_dark"><color rgba="0.1 0.1 0.1 1.0"/></material>
-    </visual>
-    <inertial>
-      <mass value="0.008"/>
-      <inertia ixx="0.0000001" ixy="0" ixz="0"
-               iyy="0.0000001" iyz="0" izz="0.0000001"/>
-    </inertial>
-  </link>
-
-  <joint name="camera_joint" type="fixed">
-    <parent link="head"/>
-    <child link="camera_link"/>
-    <origin xyz="0 0.018 0.010" rpy="0 0 0"/>
-  </joint>
-
-  <!-- ═══════════════════════════════════════════════
-       ЛЕВАЯ РУКА: shoulder_pitch → shoulder_roll → elbow → wrist
-       Все суставы в стандартной позе (нет rpy в origin)
-  ═══════════════════════════════════════════════ -->
+  <!-- ═══════════════════════════════════════════════════════════════════
+       ЛЕВАЯ РУКА   (SG92R ×4: shoulder_pitch / shoulder_roll / elbow / wrist)
+       Крепление к торсу: xyz="0.035 0 0.040" (левый бок, ≈верх торса)
+       ═══════════════════════════════════════════════════════════════════ -->
   <link name="left_shoulder_pitch_link">
     <inertial>
-      <mass value="0.005"/>
-      <inertia ixx="0.0000001" ixy="0" ixz="0"
-               iyy="0.0000001" iyz="0" izz="0.0000001"/>
+      <mass value="0.009"/>
+      <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001"/>
     </inertial>
   </link>
 
   <joint name="left_shoulder_pitch" type="revolute">
     <parent link="torso"/>
     <child link="left_shoulder_pitch_link"/>
-    <origin xyz="0.045 0 0.03" rpy="0 0 0"/>
-    <axis xyz="0 1 0"/>
-    <limit lower="-1.571" upper="1.571" effort="0.245" velocity="3.14"/>
+    <origin xyz="0.035 0 0.040" rpy="0 0 0"/>
+    <axis xyz="1 0 0"/>
+    <limit lower="-1.571" upper="1.571" effort="0.245" velocity="5.5"/>
   </joint>
 
   <link name="left_upper_arm">
     <visual>
-      <geometry><cylinder radius="0.015" length="0.045"/></geometry>
-      <material name="body_blue"/>
+      <origin xyz="0 0 -0.027" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.012" length="0.055"/></geometry>
+      <material name="arm_light"><color rgba="0.75 0.78 0.85 1.0"/></material>
     </visual>
     <collision>
-      <geometry><cylinder radius="0.015" length="0.045"/></geometry>
+      <origin xyz="0 0 -0.027" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.012" length="0.055"/></geometry>
     </collision>
     <inertial>
-      <mass value="0.025"/>
-      <!-- cylinder: ixx=iyy=(m/12)*(3r²+l²), izz=(m/2)*r² -->
-      <inertia ixx="0.000005" ixy="0" ixz="0"
-               iyy="0.000005" iyz="0" izz="0.000003"/>
+      <mass value="0.050"/>
+      <!-- cylinder: Ixx=Iyy=(1/12)m(3r²+l²), Izz=(1/2)mr² -->
+      <inertia ixx="0.0000145" ixy="0" ixz="0" iyy="0.0000145" iyz="0" izz="0.0000036"/>
     </inertial>
   </link>
 
   <joint name="left_shoulder_roll" type="revolute">
     <parent link="left_shoulder_pitch_link"/>
     <child link="left_upper_arm"/>
-    <origin xyz="0 0 0" rpy="0 0 0"/>
-    <axis xyz="1 0 0"/>
-    <limit lower="-1.047" upper="1.047" effort="0.245" velocity="3.14"/>
+    <origin xyz="0 0 -0.010" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-1.047" upper="1.047" effort="0.245" velocity="5.5"/>
   </joint>
 
-  <link name="left_forearm">
+  <link name="left_lower_arm">
     <visual>
-      <geometry><cylinder radius="0.012" length="0.040"/></geometry>
-      <material name="body_blue"/>
+      <origin xyz="0 0 -0.025" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.010" length="0.050"/></geometry>
+      <material name="arm_light"><color rgba="0.75 0.78 0.85 1.0"/></material>
     </visual>
     <collision>
-      <geometry><cylinder radius="0.012" length="0.040"/></geometry>
+      <origin xyz="0 0 -0.025" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.010" length="0.050"/></geometry>
     </collision>
     <inertial>
-      <mass value="0.018"/>
-      <inertia ixx="0.000003" ixy="0" ixz="0"
-               iyy="0.000003" iyz="0" izz="0.000001"/>
+      <mass value="0.040"/>
+      <inertia ixx="0.0000088" ixy="0" ixz="0" iyy="0.0000088" iyz="0" izz="0.0000020"/>
     </inertial>
   </link>
 
   <joint name="left_elbow_pitch" type="revolute">
     <parent link="left_upper_arm"/>
-    <child link="left_forearm"/>
-    <origin xyz="0 0 -0.045" rpy="0 0 0"/>
-    <axis xyz="0 1 0"/>
-    <limit lower="0" upper="2.094" effort="0.245" velocity="3.14"/>
+    <child link="left_lower_arm"/>
+    <origin xyz="0 0 -0.055" rpy="0 0 0"/>
+    <axis xyz="1 0 0"/>
+    <limit lower="0" upper="2.094" effort="0.245" velocity="5.5"/>
   </joint>
 
+  <!-- Кисть: фиксированный крюк/заглушка — нет сервопривода, нет DOF -->
   <link name="left_hand">
     <visual>
-      <geometry><box size="0.025 0.020 0.015"/></geometry>
-      <material name="body_blue"/>
+      <origin xyz="0 0 -0.015" rpy="0 0 0"/>
+      <geometry><box size="0.018 0.012 0.030"/></geometry>
+      <material name="hand_dark"><color rgba="0.25 0.25 0.30 1.0"/></material>
     </visual>
     <collision>
-      <geometry><box size="0.025 0.020 0.015"/></geometry>
+      <origin xyz="0 0 -0.015" rpy="0 0 0"/>
+      <geometry><box size="0.018 0.012 0.030"/></geometry>
     </collision>
     <inertial>
-      <mass value="0.010"/>
-      <inertia ixx="0.0000004" ixy="0" ixz="0"
-               iyy="0.0000005" iyz="0" izz="0.0000006"/>
+      <mass value="0.015"/>
+      <inertia ixx="0.0000009" ixy="0" ixz="0" iyy="0.0000012" iyz="0" izz="0.0000006"/>
     </inertial>
   </link>
 
-  <joint name="left_wrist_pitch" type="revolute">
-    <parent link="left_forearm"/>
+  <joint name="left_wrist_pitch" type="fixed">
+    <parent link="left_lower_arm"/>
     <child link="left_hand"/>
-    <origin xyz="0 0 -0.040" rpy="0 0 0"/>
-    <axis xyz="0 1 0"/>
-    <limit lower="-0.785" upper="0.785" effort="0.196" velocity="3.14"/>
+    <origin xyz="0 0 -0.050" rpy="0 0 0"/>
   </joint>
 
-  <!-- ═══════════════════════════════════════════════
-       ПРАВАЯ РУКА (зеркально)
-  ═══════════════════════════════════════════════ -->
+  <!-- ═══════════════════════════════════════════════════════════════════
+       ПРАВАЯ РУКА   (зеркало левой, x=-0.035)
+       ═══════════════════════════════════════════════════════════════════ -->
   <link name="right_shoulder_pitch_link">
     <inertial>
-      <mass value="0.005"/>
-      <inertia ixx="0.0000001" ixy="0" ixz="0"
-               iyy="0.0000001" iyz="0" izz="0.0000001"/>
+      <mass value="0.009"/>
+      <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001"/>
     </inertial>
   </link>
 
   <joint name="right_shoulder_pitch" type="revolute">
     <parent link="torso"/>
     <child link="right_shoulder_pitch_link"/>
-    <origin xyz="-0.045 0 0.03" rpy="0 0 0"/>
-    <axis xyz="0 1 0"/>
-    <limit lower="-1.571" upper="1.571" effort="0.245" velocity="3.14"/>
+    <origin xyz="-0.035 0 0.040" rpy="0 0 0"/>
+    <axis xyz="1 0 0"/>
+    <limit lower="-1.571" upper="1.571" effort="0.245" velocity="5.5"/>
   </joint>
 
   <link name="right_upper_arm">
     <visual>
-      <geometry><cylinder radius="0.015" length="0.045"/></geometry>
-      <material name="body_blue"/>
+      <origin xyz="0 0 -0.027" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.012" length="0.055"/></geometry>
+      <material name="arm_light"><color rgba="0.75 0.78 0.85 1.0"/></material>
     </visual>
     <collision>
-      <geometry><cylinder radius="0.015" length="0.045"/></geometry>
+      <origin xyz="0 0 -0.027" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.012" length="0.055"/></geometry>
     </collision>
     <inertial>
-      <mass value="0.025"/>
-      <inertia ixx="0.000005" ixy="0" ixz="0"
-               iyy="0.000005" iyz="0" izz="0.000003"/>
+      <mass value="0.050"/>
+      <inertia ixx="0.0000145" ixy="0" ixz="0" iyy="0.0000145" iyz="0" izz="0.0000036"/>
     </inertial>
   </link>
 
   <joint name="right_shoulder_roll" type="revolute">
     <parent link="right_shoulder_pitch_link"/>
     <child link="right_upper_arm"/>
-    <origin xyz="0 0 0" rpy="0 0 0"/>
-    <axis xyz="1 0 0"/>
-    <limit lower="-1.047" upper="1.047" effort="0.245" velocity="3.14"/>
+    <origin xyz="0 0 -0.010" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-1.047" upper="1.047" effort="0.245" velocity="5.5"/>
   </joint>
 
-  <link name="right_forearm">
+  <link name="right_lower_arm">
     <visual>
-      <geometry><cylinder radius="0.012" length="0.040"/></geometry>
-      <material name="body_blue"/>
+      <origin xyz="0 0 -0.025" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.010" length="0.050"/></geometry>
+      <material name="arm_light"><color rgba="0.75 0.78 0.85 1.0"/></material>
     </visual>
     <collision>
-      <geometry><cylinder radius="0.012" length="0.040"/></geometry>
+      <origin xyz="0 0 -0.025" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.010" length="0.050"/></geometry>
     </collision>
     <inertial>
-      <mass value="0.018"/>
-      <inertia ixx="0.000003" ixy="0" ixz="0"
-               iyy="0.000003" iyz="0" izz="0.000001"/>
+      <mass value="0.040"/>
+      <inertia ixx="0.0000088" ixy="0" ixz="0" iyy="0.0000088" iyz="0" izz="0.0000020"/>
     </inertial>
   </link>
 
   <joint name="right_elbow_pitch" type="revolute">
     <parent link="right_upper_arm"/>
-    <child link="right_forearm"/>
-    <origin xyz="0 0 -0.045" rpy="0 0 0"/>
-    <axis xyz="0 1 0"/>
-    <limit lower="0" upper="2.094" effort="0.245" velocity="3.14"/>
+    <child link="right_lower_arm"/>
+    <origin xyz="0 0 -0.055" rpy="0 0 0"/>
+    <axis xyz="1 0 0"/>
+    <limit lower="0" upper="2.094" effort="0.245" velocity="5.5"/>
   </joint>
 
+  <!-- Кисть: фиксированный крюк/заглушка — нет сервопривода, нет DOF -->
   <link name="right_hand">
     <visual>
-      <geometry><box size="0.025 0.020 0.015"/></geometry>
-      <material name="body_blue"/>
+      <origin xyz="0 0 -0.015" rpy="0 0 0"/>
+      <geometry><box size="0.018 0.012 0.030"/></geometry>
+      <material name="hand_dark"><color rgba="0.25 0.25 0.30 1.0"/></material>
     </visual>
     <collision>
-      <geometry><box size="0.025 0.020 0.015"/></geometry>
+      <origin xyz="0 0 -0.015" rpy="0 0 0"/>
+      <geometry><box size="0.018 0.012 0.030"/></geometry>
     </collision>
     <inertial>
-      <mass value="0.010"/>
-      <inertia ixx="0.0000004" ixy="0" ixz="0"
-               iyy="0.0000005" iyz="0" izz="0.0000006"/>
+      <mass value="0.015"/>
+      <inertia ixx="0.0000009" ixy="0" ixz="0" iyy="0.0000012" iyz="0" izz="0.0000006"/>
     </inertial>
   </link>
 
-  <joint name="right_wrist_pitch" type="revolute">
-    <parent link="right_forearm"/>
+  <joint name="right_wrist_pitch" type="fixed">
+    <parent link="right_lower_arm"/>
     <child link="right_hand"/>
-    <origin xyz="0 0 -0.040" rpy="0 0 0"/>
-    <axis xyz="0 1 0"/>
-    <limit lower="-0.785" upper="0.785" effort="0.196" velocity="3.14"/>
+    <origin xyz="0 0 -0.050" rpy="0 0 0"/>
   </joint>
 
-  <!-- ═══════════════════════════════════════════════
-       ЛЕВАЯ НОГА: hip_yaw → hip_roll → hip_pitch → knee → ankle_pitch → ankle_roll
-  ═══════════════════════════════════════════════ -->
+  <!-- ═══════════════════════════════════════════════════════════════════
+       ЛЕВАЯ НОГА   (MG996R ×6)
+       hip_yaw → hip_roll → [upper_leg] → knee → ankle_pitch
+       → [ankle_pitch_link] → ankle_roll → foot
+       ═══════════════════════════════════════════════════════════════════ -->
   <link name="left_hip_yaw_link">
     <inertial>
-      <mass value="0.010"/>
-      <inertia ixx="0.0000005" ixy="0" ixz="0"
-               iyy="0.0000005" iyz="0" izz="0.0000005"/>
+      <mass value="0.055"/>
+      <inertia ixx="0.0002" ixy="0" ixz="0" iyy="0.0002" iyz="0" izz="0.0002"/>
     </inertial>
   </link>
 
   <joint name="left_hip_yaw" type="revolute">
     <parent link="torso"/>
     <child link="left_hip_yaw_link"/>
-    <origin xyz="0.025 0 -0.045" rpy="0 0 0"/>
+    <origin xyz="0.025 0 -0.065" rpy="0 0 0"/>
     <axis xyz="0 0 1"/>
     <limit lower="-0.524" upper="0.524" effort="0.980" velocity="3.14"/>
   </joint>
 
   <link name="left_hip_roll_link">
     <inertial>
-      <mass value="0.010"/>
-      <inertia ixx="0.0000005" ixy="0" ixz="0"
-               iyy="0.0000005" iyz="0" izz="0.0000005"/>
+      <mass value="0.055"/>
+      <inertia ixx="0.0002" ixy="0" ixz="0" iyy="0.0002" iyz="0" izz="0.0002"/>
     </inertial>
   </link>
 
   <joint name="left_hip_roll" type="revolute">
     <parent link="left_hip_yaw_link"/>
     <child link="left_hip_roll_link"/>
-    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <origin xyz="0 0 -0.030" rpy="0 0 0"/>
     <axis xyz="0 1 0"/>
     <limit lower="-0.524" upper="0.524" effort="0.980" velocity="3.14"/>
   </joint>
 
   <link name="left_upper_leg">
     <visual>
+      <origin xyz="0 0 -0.030" rpy="0 0 0"/>
       <geometry><cylinder radius="0.015" length="0.060"/></geometry>
-      <material name="body_blue"/>
+      <material name="leg_blue"><color rgba="0.18 0.27 0.47 1.0"/></material>
     </visual>
     <collision>
+      <origin xyz="0 0 -0.030" rpy="0 0 0"/>
       <geometry><cylinder radius="0.015" length="0.060"/></geometry>
     </collision>
     <inertial>
-      <mass value="0.055"/>
-      <inertia ixx="0.000017" ixy="0" ixz="0"
-               iyy="0.000017" iyz="0" izz="0.000006"/>
+      <mass value="0.100"/>
+      <inertia ixx="0.0004" ixy="0" ixz="0" iyy="0.0004" iyz="0" izz="0.0001"/>
     </inertial>
   </link>
 
   <joint name="left_hip_pitch" type="revolute">
     <parent link="left_hip_roll_link"/>
     <child link="left_upper_leg"/>
-    <origin xyz="0 0 -0.010" rpy="0 0 0"/>
+    <origin xyz="0 0 -0.020" rpy="0 0 0"/>
     <axis xyz="1 0 0"/>
     <limit lower="-1.047" upper="0.785" effort="0.980" velocity="3.14"/>
   </joint>
 
   <link name="left_lower_leg">
     <visual>
+      <origin xyz="0 0 -0.030" rpy="0 0 0"/>
       <geometry><cylinder radius="0.013" length="0.060"/></geometry>
-      <material name="body_blue"/>
+      <material name="leg_blue"><color rgba="0.18 0.27 0.47 1.0"/></material>
     </visual>
     <collision>
+      <origin xyz="0 0 -0.030" rpy="0 0 0"/>
       <geometry><cylinder radius="0.013" length="0.060"/></geometry>
     </collision>
     <inertial>
-      <mass value="0.055"/>
-      <inertia ixx="0.000017" ixy="0" ixz="0"
-               iyy="0.000017" iyz="0" izz="0.000005"/>
+      <mass value="0.100"/>
+      <inertia ixx="0.0004" ixy="0" ixz="0" iyy="0.0004" iyz="0" izz="0.0001"/>
     </inertial>
   </link>
 
@@ -353,15 +361,16 @@
     <parent link="left_upper_leg"/>
     <child link="left_lower_leg"/>
     <origin xyz="0 0 -0.060" rpy="0 0 0"/>
-    <axis xyz="1 0 0"/>
+    <axis xyz="-1 0 0"/><!-- -X: положительный угол = голень назад (анатомически правильно) -->
     <limit lower="0" upper="2.094" effort="0.980" velocity="3.14"/>
   </joint>
 
+  <!-- ankle_pitch_link: промежуточное звено между голенью и стопой,
+       нужно для добавления ankle_roll (MG996R) -->
   <link name="left_ankle_pitch_link">
     <inertial>
-      <mass value="0.010"/>
-      <inertia ixx="0.0000005" ixy="0" ixz="0"
-               iyy="0.0000005" iyz="0" izz="0.0000005"/>
+      <mass value="0.055"/>
+      <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001"/>
     </inertial>
   </link>
 
@@ -375,97 +384,98 @@
 
   <link name="left_foot">
     <visual>
-      <geometry><box size="0.040 0.025 0.010"/></geometry>
-      <material name="body_blue"/>
+      <origin xyz="0 0 -0.005" rpy="0 0 0"/>
+      <geometry><box size="0.025 0.065 0.010"/></geometry>
+      <material name="foot_dark"><color rgba="0.20 0.20 0.25 1.0"/></material>
     </visual>
     <collision>
-      <geometry><box size="0.040 0.025 0.010"/></geometry>
+      <origin xyz="0 0 -0.005" rpy="0 0 0"/>
+      <geometry><box size="0.025 0.065 0.010"/></geometry>
     </collision>
     <inertial>
       <mass value="0.055"/>
-      <inertia ixx="0.000004" ixy="0" ixz="0"
-               iyy="0.000008" iyz="0" izz="0.000011"/>
+      <inertia ixx="0.0002" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0003"/>
     </inertial>
   </link>
 
   <joint name="left_ankle_roll" type="revolute">
     <parent link="left_ankle_pitch_link"/>
     <child link="left_foot"/>
-    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <origin xyz="0 0 -0.005" rpy="0 0 0"/>
     <axis xyz="0 1 0"/>
-    <limit lower="-0.349" upper="0.349" effort="0.980" velocity="3.14"/>
+    <limit lower="-0.524" upper="0.524" effort="0.980" velocity="3.14"/>
   </joint>
 
-  <!-- ═══════════════════════════════════════════════
-       ПРАВАЯ НОГА (зеркально)
-  ═══════════════════════════════════════════════ -->
+  <!-- ═══════════════════════════════════════════════════════════════════
+       ПРАВАЯ НОГА   (зеркало левой, x=-0.025)
+       ═══════════════════════════════════════════════════════════════════ -->
   <link name="right_hip_yaw_link">
     <inertial>
-      <mass value="0.010"/>
-      <inertia ixx="0.0000005" ixy="0" ixz="0"
-               iyy="0.0000005" iyz="0" izz="0.0000005"/>
+      <mass value="0.055"/>
+      <inertia ixx="0.0002" ixy="0" ixz="0" iyy="0.0002" iyz="0" izz="0.0002"/>
     </inertial>
   </link>
 
   <joint name="right_hip_yaw" type="revolute">
     <parent link="torso"/>
     <child link="right_hip_yaw_link"/>
-    <origin xyz="-0.025 0 -0.045" rpy="0 0 0"/>
+    <origin xyz="-0.025 0 -0.065" rpy="0 0 0"/>
     <axis xyz="0 0 1"/>
     <limit lower="-0.524" upper="0.524" effort="0.980" velocity="3.14"/>
   </joint>
 
   <link name="right_hip_roll_link">
     <inertial>
-      <mass value="0.010"/>
-      <inertia ixx="0.0000005" ixy="0" ixz="0"
-               iyy="0.0000005" iyz="0" izz="0.0000005"/>
+      <mass value="0.055"/>
+      <inertia ixx="0.0002" ixy="0" ixz="0" iyy="0.0002" iyz="0" izz="0.0002"/>
     </inertial>
   </link>
 
   <joint name="right_hip_roll" type="revolute">
     <parent link="right_hip_yaw_link"/>
     <child link="right_hip_roll_link"/>
-    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <origin xyz="0 0 -0.030" rpy="0 0 0"/>
     <axis xyz="0 1 0"/>
     <limit lower="-0.524" upper="0.524" effort="0.980" velocity="3.14"/>
   </joint>
 
   <link name="right_upper_leg">
     <visual>
+      <origin xyz="0 0 -0.030" rpy="0 0 0"/>
       <geometry><cylinder radius="0.015" length="0.060"/></geometry>
-      <material name="body_blue"/>
+      <material name="leg_blue"><color rgba="0.18 0.27 0.47 1.0"/></material>
     </visual>
     <collision>
+      <origin xyz="0 0 -0.030" rpy="0 0 0"/>
       <geometry><cylinder radius="0.015" length="0.060"/></geometry>
     </collision>
     <inertial>
-      <mass value="0.055"/>
-      <inertia ixx="0.000017" ixy="0" ixz="0"
-               iyy="0.000017" iyz="0" izz="0.000006"/>
+      <mass value="0.100"/>
+      <inertia ixx="0.0004" ixy="0" ixz="0" iyy="0.0004" iyz="0" izz="0.0001"/>
     </inertial>
   </link>
 
   <joint name="right_hip_pitch" type="revolute">
     <parent link="right_hip_roll_link"/>
     <child link="right_upper_leg"/>
-    <origin xyz="0 0 -0.010" rpy="0 0 0"/>
+    <origin xyz="0 0 -0.020" rpy="0 0 0"/>
     <axis xyz="1 0 0"/>
     <limit lower="-1.047" upper="0.785" effort="0.980" velocity="3.14"/>
   </joint>
 
   <link name="right_lower_leg">
     <visual>
+      <origin xyz="0 0 -0.030" rpy="0 0 0"/>
       <geometry><cylinder radius="0.013" length="0.060"/></geometry>
-      <material name="body_blue"/>
+      <material name="leg_blue"><color rgba="0.18 0.27 0.47 1.0"/></material>
     </visual>
     <collision>
+      <origin xyz="0 0 -0.030" rpy="0 0 0"/>
       <geometry><cylinder radius="0.013" length="0.060"/></geometry>
     </collision>
     <inertial>
-      <mass value="0.055"/>
-      <inertia ixx="0.000017" ixy="0" ixz="0"
-               iyy="0.000017" iyz="0" izz="0.000005"/>
+      <mass value="0.100"/>
+      <inertia ixx="0.0004" ixy="0" ixz="0" iyy="0.0004" iyz="0" izz="0.0001"/>
     </inertial>
   </link>
 
@@ -479,9 +489,8 @@
 
   <link name="right_ankle_pitch_link">
     <inertial>
-      <mass value="0.010"/>
-      <inertia ixx="0.0000005" ixy="0" ixz="0"
-               iyy="0.0000005" iyz="0" izz="0.0000005"/>
+      <mass value="0.055"/>
+      <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001"/>
     </inertial>
   </link>
 
@@ -495,25 +504,26 @@
 
   <link name="right_foot">
     <visual>
-      <geometry><box size="0.040 0.025 0.010"/></geometry>
-      <material name="body_blue"/>
+      <origin xyz="0 0 -0.005" rpy="0 0 0"/>
+      <geometry><box size="0.025 0.065 0.010"/></geometry>
+      <material name="foot_dark"><color rgba="0.20 0.20 0.25 1.0"/></material>
     </visual>
     <collision>
-      <geometry><box size="0.040 0.025 0.010"/></geometry>
+      <origin xyz="0 0 -0.005" rpy="0 0 0"/>
+      <geometry><box size="0.025 0.065 0.010"/></geometry>
     </collision>
     <inertial>
       <mass value="0.055"/>
-      <inertia ixx="0.000004" ixy="0" ixz="0"
-               iyy="0.000008" iyz="0" izz="0.000011"/>
+      <inertia ixx="0.0002" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0003"/>
     </inertial>
   </link>
 
   <joint name="right_ankle_roll" type="revolute">
     <parent link="right_ankle_pitch_link"/>
     <child link="right_foot"/>
-    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <origin xyz="0 0 -0.005" rpy="0 0 0"/>
     <axis xyz="0 1 0"/>
-    <limit lower="-0.349" upper="0.349" effort="0.980" velocity="3.14"/>
+    <limit lower="-0.524" upper="0.524" effort="0.980" velocity="3.14"/>
   </joint>
 
 </robot>
