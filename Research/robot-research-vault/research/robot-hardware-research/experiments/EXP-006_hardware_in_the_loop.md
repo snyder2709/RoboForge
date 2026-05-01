@@ -118,15 +118,18 @@
 | Joint (URDF) | Тип серво | PCA9685 CH | Диапазон |
 |---|---|---|---|
 | left_shoulder_pitch | SG92R | CH0 | -1.57..1.57 rad |
-| left_elbow_pitch | SG92R | CH1 | 0..2.09 rad |
-| left_wrist_pitch | SG92R | CH2 | -1.57..1.57 rad |
-| right_shoulder_pitch | SG92R | CH3 | -1.57..1.57 rad |
-| right_elbow_pitch | SG92R | CH4 | 0..2.09 rad |
-| right_wrist_pitch | SG92R | CH5 | -1.57..1.57 rad |
-| left_hip_pitch | MG996R | CH6 | -1.04..1.04 rad |
-| left_knee_pitch | MG996R | CH7 | 0..2.09 rad |
-| right_hip_pitch | MG996R | CH8 | -1.04..1.04 rad |
-| right_knee_pitch | MG996R | CH9 | 0..2.09 rad |
+| left_shoulder_roll  | SG92R | CH1 | -1.05..1.05 rad |
+| left_elbow_pitch    | SG92R | CH2 | 0..2.09 rad |
+| right_shoulder_pitch| SG92R | CH3 | -1.57..1.57 rad |
+| right_shoulder_roll | SG92R | CH4 | -1.05..1.05 rad |
+| right_elbow_pitch   | SG92R | CH5 | 0..2.09 rad |
+| left_hip_pitch      | MG996R| CH6 | -1.04..0.79 rad |
+| left_knee_pitch     | MG996R| CH7 | 0..2.09 rad |
+| right_hip_pitch     | MG996R| CH8 | -1.04..0.79 rad |
+| right_knee_pitch    | MG996R| CH9 | 0..2.09 rad |
+
+> **Кисти (wrist_pitch)** — removed. Физически: фиксированный крюк/заглушка на конце предплечья.
+> Канал PCA9685 не нужен. SG92R на кисти не закупать.
 
 ## Настройка сети
 
@@ -186,6 +189,44 @@ python3 raspi_controller.py
 ## Следующий шаг после успеха
 
 Доработать URDF (production качество), адаптировать STL от Poppy Humanoid, напечатать каркас и установить все 20 серво.
+
+## TODO: обновить после перехода на URDF v2 (22 DOF)
+
+> Добавлено 2026-04-13 при переходе URDF на полную кинематику (HLD Железо v1.4).
+
+### Таблица маппинга суставов → каналы PCA9685
+
+Текущая таблица (раздел «Маппинг суставов») содержит **только 10 суставов** (6 рук + 4 ноги).
+Теперь робот имеет **22 сустава** — нужно добавить 12 новых каналов:
+
+| Joint (новый) | Тип серво | PCA9685 | CH (предлагаемый) |
+|---|---|---|---|
+| left_shoulder_roll | SG92R | PCA9685 #1 | CH6 |
+| right_shoulder_roll | SG92R | PCA9685 #1 | CH7 |
+| left_hip_roll | MG996R | PCA9685 #2 | CH0 |
+| right_hip_roll | MG996R | PCA9685 #2 | CH1 |
+| left_hip_yaw | MG996R | PCA9685 #2 | CH2 |
+| right_hip_yaw | MG996R | PCA9685 #2 | CH3 |
+| left_ankle_roll | MG996R | PCA9685 #2 | CH4 |
+| right_ankle_roll | MG996R | PCA9685 #2 | CH5 |
+| left_knee_pitch | MG996R | PCA9685 #2 | CH6 |
+| right_knee_pitch | MG996R | PCA9685 #2 | CH7 |
+| left_ankle_pitch | MG996R | PCA9685 #2 | CH8 |
+| right_ankle_pitch | MG996R | PCA9685 #2 | CH9 |
+
+Итог: потребуется **2× PCA9685** (уже запланировано в HLD электроника).
+При финальной распайке пересмотреть нумерацию — разбить по физическому расположению
+(PCA9685 #1 = голова+руки, PCA9685 #2 = ноги).
+
+### Другие документы для обновления
+
+- [ ] **HLD Железо v1.4** (`hld/hardware/hld_hardware_v1_2.md`):
+  строка «DOF: 21» vs сумма таблицы (22) — уточнить (вероятно, одна пара ankle_roll считалась как 1).
+  Строка «Вес 350–450 г» занижена: 12×MG996R(55г)+10×SG92R(9г)+структура ≈ 1 кг.
+- [ ] **raspi_controller.py** (`services/raspi_controller/`):
+  добавить 12 новых суставов в словарь channel_map.
+- [ ] **Webots PROTO** (`simulation/`):
+  при создании production URDF для Webots взять humanoid_v2.urdf как основу.
 
 ## Связанные документы
 
