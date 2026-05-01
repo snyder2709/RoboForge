@@ -11,6 +11,7 @@
 ## Скилы
 
 - [[Research/robot-research-vault/skills/research_methodology|research_methodology]] — методика технического исследования архитектуры
+- [[Research/robot-research-vault/skills/conventional_commits|conventional_commits]] — конвенция коммитов: типы, scope, breaking changes, примеры для RoboForge
 
 ## Правила для агентов
 

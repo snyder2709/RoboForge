@@ -13,7 +13,22 @@
       "Bash(\"C:/Python314/python.exe\" -c \"import zenoh; s = zenoh.open\\(zenoh.Config\\(\\)\\); s.close\\(\\); print\\(''zenoh works''\\)\")",
       "Bash(powershell -Command \"Get-ChildItem -Path ''C:\\\\Users\\\\work'' -Recurse -Filter ''styles-audit.md'' -ErrorAction SilentlyContinue | Select-Object FullName\")",
       "Bash(.venv/Scripts/pip list:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(py --version)",
+      "Bash(py -3.10 --version)",
+      "Bash(py --list)",
+      "Bash(where py:*)",
+      "Bash(py -3.10 -c \"import sys; print\\(sys.executable\\)\")",
+      "Bash(setx PY_PYTHON 3.10)",
+      "Bash(py -3.14 -c \"import sys; print\\(sys.executable\\)\")",
+      "Bash(powershell -Command \"[Environment]::GetEnvironmentVariable\\('PATH', 'User'\\)\")",
+      "Read(//c/Users/work/AppData/Local/Python/bin/**)",
+      "Read(//c/Users/work/AppData/Local/Python/pythoncore-3.14-64/**)",
+      "Read(//c/Users/work/AppData/Local/Python/pythoncore-3.10-64/**)",
+      "Bash(pymanager --help)",
+      "Bash(pymanager uninstall:*)",
+      "Bash(where python:*)",
+      "Bash(python -c \"from mjlab.utils.os import get_checkpoint_path; help\\(get_checkpoint_path\\)\")"
     ]
   }
 }
