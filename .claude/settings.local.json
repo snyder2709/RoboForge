@@ -28,7 +28,13 @@
       "Bash(pymanager --help)",
       "Bash(pymanager uninstall:*)",
       "Bash(where python:*)",
-      "Bash(python -c \"from mjlab.utils.os import get_checkpoint_path; help\\(get_checkpoint_path\\)\")"
+      "Bash(python -c \"from mjlab.utils.os import get_checkpoint_path; help\\(get_checkpoint_path\\)\")",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(cargo check *)",
+      "Bash(echo \"cargo check started in background PID=$!\")",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)"
     ]
   }
 }
