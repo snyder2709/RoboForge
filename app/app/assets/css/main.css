@@ -1,0 +1,55 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+@theme {
+  /* ── Surfaces ─────────────────────────────── */
+  --color-bg-deep: #0F0E0D;
+  --color-surface-dark: #1C1917;
+  --color-surface-hover: #2A2724;
+  --color-surface-disabled: #3A3733;
+
+  /* ── Brand (coral) ───────────────────────── */
+  --color-coral-primary: #E8784A;
+  --color-coral-light: #F5C4B3;
+  --color-coral-dim: #FBE2D2;
+
+  /* ── Cool counterpoint (joints / swarm) ──── */
+  --color-joint-blue: #3A6FAF;
+  --color-joint-highlight: #5B95D8;
+  --color-swarm-light: #B5D4F4;
+
+  /* ── Text ────────────────────────────────── */
+  --color-text-primary: #F5F0EB;
+  --color-text-secondary: #9E9A93;
+  --color-text-tertiary: #5F5E5A;
+  --color-text-disabled: #3A3733;
+
+  /* ── Robot viewer ────────────────────────── */
+  --color-robot-shell: #EAE7E1;
+  --color-robot-shell-stroke: #2A2724;
+  --color-robot-accent-gray: #9E9A93;
+  --color-robot-belt: #D6D2CB;
+
+  /* ── Status ──────────────────────────────── */
+  --color-success: #7AB87A;
+  --color-danger: #E63E3E;
+  --color-danger-fill: #9E2828;
+  --color-warning: #E8B89E;
+
+  /* ── Typography scale ────────────────────── */
+  --text-display: 18px;
+  --text-card-title: 14px;
+  --text-bar-value: 13px;
+  --text-desc: 11px;
+  --text-micro: 10px;
+  --text-emergency: 9px;
+}
+
+/* Base */
+html, body {
+  background-color: var(--color-bg-deep);
+  color: var(--color-text-primary);
+  font-family: system-ui, -apple-system, sans-serif;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+}
