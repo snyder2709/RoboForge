@@ -15,6 +15,7 @@
 | v3.1 | 2026-03-16 | Полный Zenoh, убран UDP и Robot Gateway | архив |
 | v3.2 | 2026-03-16 | Tauri 2.0 вместо FastAPI dashboard, UI слой, голосовые сценарии | черновик |
 | v3.3 | 2026-03-17 | swarm/task/{id} — адресная раздача задач агентам (ADR: Вариант B) | черновик |
+| v3.4 | 2026-05-01 | UI: монорепо убран → единый app/, Nuxt 4.4 + Tauri 2.0 шаблон запущен | черновик |
 
 ---
 
@@ -117,16 +118,24 @@ ZenohPico --> ZenohRouter : robot/{id}/state 2Гц
 | Desktop (Brain PC) | Tauri 2.0 + Rust backend | Мониторинг, конфигурация, сценарии |
 | Mobile (iOS/Android) | Tauri 2.0 | Голосовые команды, быстрые действия, статус |
 
-**Монорепо — структура:**
+**Структура приложения (`app/`):**
 
 ```
-apps/
-  desktop/      # Tauri 2.0 Desktop (Brain PC)
-  mobile/       # Tauri 2.0 Mobile (iOS / Android)
-packages/
-  ui/           # Shared React/Svelte компоненты
-  zenoh-ipc/    # Tauri plugin: Zenoh ↔ WebView bridge (Rust)
+app/                          # единый проект — Desktop + iOS + Android
+  app/
+    assets/css/main.css       # design tokens (Tailwind v4 @theme)
+    components/               # Vue компоненты
+    modules/tauri.ts          # Nuxt module: auto-import всех Tauri API
+    pages/                    # роуты
+  src-tauri/
+    src/lib.rs                # Rust backend: плагины, команды
+    capabilities/             # разрешения по платформам
+    tauri.conf.json
+  nuxt.config.ts
+  package.json
 ```
+
+> Tauri 2.0 мультиплатформенный из коробки: `tauri dev` / `tauri ios dev` / `tauri android dev` — один проект. Zenoh IPC реализуется как Rust код в `src-tauri/src/`, отдельный пакет не нужен.
 
 **Rust backend Tauri отвечает за:**
 - Zenoh pub/sub (нативный eclipse-zenoh Rust)
@@ -183,8 +192,8 @@ Tauri: "Робот 1 выполняет: движение к точке A"
 | LLM runtime | Ollama + Phi-3 Mini |
 | Desktop UI | Tauri 2.0 (Rust + WebUI) |
 | Mobile UI | Tauri 2.0 (iOS / Android) |
-| Монорепо | pnpm workspaces (apps/desktop, apps/mobile, packages/ui, packages/zenoh-ipc) |
-| Frontend WebUI | Nuxt 4 (Vue 3 + Vite) — шаблон готов |
+| UI проект | единый `app/` (pnpm, Nuxt 4.4 + Tauri 2.0) |
+| Frontend WebUI | Nuxt 4.4 (Vue 3 + Vite), шаблон запущен |
 | Симулятор | Webots R2023b+ |
 | Pico 2W runtime | C/FreeRTOS |
 | Pico 2W транспорт | zenoh-pico |
@@ -235,7 +244,7 @@ Servo Task (50 Гц, RT)    → IK → PCA9685 I2C → 20 серво
 | ------------------------- | ---------- | ---------------------------- |
 | Слои 1–3 (PC сторона)     | 100%       | —                            |
 | Zenoh топики + QoS        | 90%        | Конфиг роя N > 4             |
-| UI слой (Tauri)           | 30%        | Не реализован, STT не выбран |
+| UI слой (Tauri)           | 25%        | Шаблон запущен, Zenoh bridge не реализован |
 | Phase 0 Virtual Robot     | 85%        | Обновить под eclipse-zenoh   |
 | Phase 1 Webots            | 88%        | URDF качество (placeholder → production) |
 | Debug UI (Phase 0/1)      | 90%        | —                            |
