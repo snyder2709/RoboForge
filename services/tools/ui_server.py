@@ -26,6 +26,7 @@ import websockets.asyncio.server
 import zenoh
 
 WS_PORT: int = 8766
+ZENOH_ROUTER: str = "tcp/127.0.0.1:7447"
 ZENOH_SUB_KEY: str = "robot/**"
 URDF_PATH: Path = (
     Path(__file__).parent.parent.parent
@@ -157,7 +158,11 @@ class UIServer:
             self.log.info("loaded %d joints from URDF: %s", len(self._joints), URDF_PATH.name)
         except Exception as exc:
             self.log.warning("URDF parse failed: %s", exc)
-        self._zenoh_session = zenoh.open(zenoh.Config())
+        self._zenoh_session = zenoh.open(
+            zenoh.Config.from_json5(
+                f'{{"connect":{{"endpoints":["{ZENOH_ROUTER}"]}}}}'
+            )
+        )
         self._zenoh_session.declare_subscriber(ZENOH_SUB_KEY, self._on_state)
         self.log.info("zenoh subscribed to %s", ZENOH_SUB_KEY)
 

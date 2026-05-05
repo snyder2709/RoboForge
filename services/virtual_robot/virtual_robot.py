@@ -25,6 +25,7 @@ import zenoh
 SERVO_COUNT: int = 20
 STATE_HZ: float = 2.0
 STATE_INTERVAL: float = 1.0 / STATE_HZ
+ZENOH_ROUTER: str = "tcp/127.0.0.1:7447"
 
 logging.basicConfig(
     level=logging.INFO,
@@ -107,7 +108,11 @@ class VirtualRobot:
 
     async def run(self) -> None:
         """Запустить робота: открыть Zenoh-сессию, войти в publish-loop."""
-        self._session = zenoh.open(zenoh.Config())
+        self._session = zenoh.open(
+            zenoh.Config.from_json5(
+                f'{{"connect":{{"endpoints":["{ZENOH_ROUTER}"]}}}}'
+            )
+        )
 
         cmd_key   = f"robot/{self.robot_id}/cmd"
         state_key = f"robot/{self.robot_id}/state"
