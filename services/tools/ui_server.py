@@ -136,14 +136,16 @@ class UIServer:
 
     def _on_state(self, sample: zenoh.Sample) -> None:
         try:
-            payload: dict[str, Any] = json.loads(bytes(sample.payload))
             key = str(sample.key_expr)
+            payload: dict[str, Any] = json.loads(bytes(sample.payload))
             if key == "robot/state":
                 # Phase 1 (Webots): {joint_name: angle_rad, ...}
                 msg = json.dumps({"type": "webots_state", "joints": payload})
-            else:
-                # Phase 0 (virtual robot): payload has "id" field
+            elif key.endswith("/state"):
+                # Phase 0: robot/{id}/state — payload has "id" field
                 msg = json.dumps({"type": "state", "robot_id": payload["id"], **payload})
+            else:
+                return  # ignore robot/{id}/cmd and other non-state topics
             asyncio.run_coroutine_threadsafe(self._broadcast(msg), self._loop)  # type: ignore[arg-type]
         except Exception as exc:
             self.log.warning("bad state payload: %s", exc)
