@@ -17,3 +17,6 @@ dist/
 
 # Zenoh binaries (скачиваются вручную, не коммитить)
 services/.bin/
+
+# Внешние RL-датасеты и эксперименты
+simulation/rl_training/unitree_rl_mjlab/
