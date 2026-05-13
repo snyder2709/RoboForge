@@ -56,6 +56,9 @@ export default defineNuxtConfig({
     vite: {
         clearScreen: false,
         envPrefix: ["VITE_", "TAURI_"],
+        optimizeDeps: {
+            include: ["three", "three/examples/jsm/controls/OrbitControls.js", "@tauri-apps/api/event", "@tauri-apps/api/core"],
+        },
         server: {
             strictPort: true,
             hmr: tauriDevHost

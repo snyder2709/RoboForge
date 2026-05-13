@@ -24,12 +24,16 @@
   "dependencies": {
     "@nuxt/ui": "^3.1.0",
     "@tauri-apps/api": "^2.0.0",
+    "@tauri-apps/plugin-dialog": "^2.7.1",
+    "@tauri-apps/plugin-fs": "^2.0.0",
     "@tauri-apps/plugin-notification": "^2.3.3",
     "@tauri-apps/plugin-os": "^2.3.2",
     "@tauri-apps/plugin-shell": "^2.3.4",
-    "@tauri-apps/plugin-fs": "^2.0.0",
     "@tauri-apps/plugin-store": "^2.4.2",
+    "@types/three": "^0.184.1",
     "nuxt": "^4.3.0",
+    "three": "^0.184.0",
+    "urdf-loader": "^0.12.7",
     "vue": "^3.5.0",
     "zod": "^3.24.0"
   },

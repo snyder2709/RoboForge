@@ -45,11 +45,51 @@
   --text-emergency: 9px;
 }
 
+/* Layout dimensions */
+:root {
+  --rail-w: 56px;
+  --left-panel-w: 340px;
+  --right-panel-w: 340px;
+  --top-bar-h: 44px;
+  --bottom-bar-h: 76px;
+}
+
 /* Base */
-html, body {
+html, body, #__nuxt {
+  height: 100%;
+  overflow: hidden;
   background-color: var(--color-bg-deep);
   color: var(--color-text-primary);
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: system-ui, -apple-system, "Helvetica Neue", sans-serif;
   font-weight: 400;
+  font-size: 13px;
+  line-height: 1.4;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
+
+button { font-family: inherit; cursor: default; }
+
+/* Liquid glass card */
+.glass-card {
+  background: linear-gradient(180deg,
+    rgba(255,255,255,0.06) 0%,
+    rgba(255,255,255,0.02) 50%,
+    rgba(0,0,0,0.18) 100%);
+  border: 0.5px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  position: relative;
+}
+.glass-card::before {
+  content: "";
+  position: absolute; top: 0; left: 14%; right: 6%; height: 0.6px;
+  background: rgba(255,255,255,0.16);
+  border-radius: 1px;
+  pointer-events: none;
+}
+
+/* Scrollbar */
+*::-webkit-scrollbar { width: 6px; height: 6px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 3px; }
+*::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.12); }
