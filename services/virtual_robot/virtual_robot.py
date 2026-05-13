@@ -27,6 +27,38 @@ STATE_HZ: float = 2.0
 STATE_INTERVAL: float = 1.0 / STATE_HZ
 ZENOH_ROUTER: str = "tcp/127.0.0.1:7447"
 
+# Маппинг: имя сустава → индекс в servos[] + диапазон (°)
+JOINT_MAP: list[dict] = [
+    {"index": 0,  "name": "head_pan",            "min_deg": -60,  "max_deg": 60},
+    {"index": 1,  "name": "left_shoulder_pitch",  "min_deg": -90,  "max_deg": 90},
+    {"index": 2,  "name": "left_elbow_pitch",      "min_deg": -120, "max_deg": 0},
+    {"index": 3,  "name": "left_wrist_pitch",      "min_deg": -45,  "max_deg": 45},
+    {"index": 4,  "name": "right_shoulder_pitch",  "min_deg": -90,  "max_deg": 90},
+    {"index": 5,  "name": "right_elbow_pitch",     "min_deg": -120, "max_deg": 0},
+    {"index": 6,  "name": "right_wrist_pitch",     "min_deg": -45,  "max_deg": 45},
+    {"index": 7,  "name": "left_hip_yaw",          "min_deg": -30,  "max_deg": 30},
+    {"index": 8,  "name": "left_hip_pitch",        "min_deg": -90,  "max_deg": 45},
+    {"index": 9,  "name": "left_knee_pitch",       "min_deg": 0,    "max_deg": 120},
+    {"index": 10, "name": "left_ankle_pitch",      "min_deg": -45,  "max_deg": 45},
+    {"index": 11, "name": "right_hip_yaw",         "min_deg": -30,  "max_deg": 30},
+    {"index": 12, "name": "right_hip_pitch",       "min_deg": -90,  "max_deg": 45},
+    {"index": 13, "name": "right_knee_pitch",      "min_deg": 0,    "max_deg": 120},
+    {"index": 14, "name": "right_ankle_pitch",     "min_deg": -45,  "max_deg": 45},
+]
+
+def _servos_to_joints(servos: list[float]) -> dict[str, float]:
+    """Конвертирует servos[] (градусы 0-180) в именованные суставы (радианы)."""
+    import math
+    result = {}
+    for jd in JOINT_MAP:
+        deg = servos[jd["index"]]
+        # 90° = нейтраль → 0 rad, диапазон симметричен
+        result[jd["name"]] = round(math.radians(deg - 90.0), 4)
+    return result
+
+MODEL_NAME = "humanoid-20dof-v1"
+URDF_MODEL = "roboforge_humanoid_v1"
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s  %(name)s  %(levelname)s  %(message)s",
@@ -101,7 +133,16 @@ class VirtualRobot:
             "id":     self.robot_id,
             "ts":     time.time(),
             "servos": [round(a, 2) for a in self.servos],
+            "joints": _servos_to_joints(self.servos),
             "imu":    {k: round(v, 4) for k, v in self.imu.items()},
+        }
+
+    def _build_descriptor(self) -> dict[str, Any]:
+        return {
+            "id":         self.robot_id,
+            "model":      MODEL_NAME,
+            "urdf_model": URDF_MODEL,
+            "joints":     JOINT_MAP,
         }
 
     # ── Жизненный цикл ────────────────────────────────────────────────────────
@@ -114,11 +155,17 @@ class VirtualRobot:
             )
         )
 
-        cmd_key   = f"robot/{self.robot_id}/cmd"
-        state_key = f"robot/{self.robot_id}/state"
+        cmd_key        = f"robot/{self.robot_id}/cmd"
+        state_key      = f"robot/{self.robot_id}/state"
+        descriptor_key = f"robot/{self.robot_id}/descriptor"
 
         self._sub = self._session.declare_subscriber(cmd_key, self._on_cmd)
         self._pub = self._session.declare_publisher(state_key)
+        desc_pub  = self._session.declare_publisher(descriptor_key)
+
+        # Публикуем descriptor один раз при старте
+        desc_pub.put(json.dumps(self._build_descriptor()))
+        self.log.info("descriptor published  key=%s", descriptor_key)
 
         self._running = True
         self.log.info(

@@ -1,0 +1,521 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  RoboForge Humanoid v1 — 15-DOF humanoid robot
+  Geometry source: simulation/protos/RoboforgeHumanoid.proto
+  Coordinate system: ROS standard (X forward, Y left, Z up)
+
+  Joint tree:
+    base_link
+    └── head_pan          (Z-axis, yaw)
+    ├── left_shoulder_pitch  (Y-axis, pitch)
+    │   └── left_elbow_pitch
+    │       └── left_wrist_pitch
+    ├── right_shoulder_pitch (Y-axis, pitch)
+    │   └── right_elbow_pitch
+    │       └── right_wrist_pitch
+    ├── left_hip_yaw         (Z-axis, yaw)
+    │   └── left_hip_pitch   (Y-axis, pitch)
+    │       └── left_knee_pitch
+    │           └── left_ankle_pitch
+    └── right_hip_yaw        (Z-axis, yaw)
+        └── right_hip_pitch  (Y-axis, pitch)
+            └── right_knee_pitch
+                └── right_ankle_pitch
+-->
+<robot name="roboforge_humanoid_v1">
+
+  <!-- ═══════════════════════════════════════════════════
+       MATERIALS
+  ═══════════════════════════════════════════════════ -->
+  <material name="body_blue">
+    <color rgba="0.18 0.27 0.47 1.0"/>
+  </material>
+  <material name="servo_silver">
+    <color rgba="0.75 0.75 0.75 1.0"/>
+  </material>
+  <material name="camera_dark">
+    <color rgba="0.1 0.1 0.1 1.0"/>
+  </material>
+
+  <!-- ═══════════════════════════════════════════════════
+       BASE / TORSO
+       Proto: Box 0.06×0.04×0.08 at origin
+       URDF origin at foot-ground level, torso center at z=0.245
+  ═══════════════════════════════════════════════════ -->
+  <link name="base_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.06 0.04 0.08"/>
+      </geometry>
+      <material name="body_blue"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.06 0.04 0.08"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.15"/>
+      <inertia ixx="0.0001" iyy="0.0001" izz="0.0001" ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+  </link>
+
+  <!-- ═══════════════════════════════════════════════════
+       HEAD
+       Proto: anchor 0 0 0.06 (Z up in Webots)
+       URDF: z=+0.06 above torso
+  ═══════════════════════════════════════════════════ -->
+  <joint name="head_pan" type="revolute">
+    <parent link="base_link"/>
+    <child link="head_link"/>
+    <origin xyz="0 0 0.060" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-1.047" upper="1.047" effort="1.5" velocity="3.14"/>
+    <dynamics damping="0.1" friction="0.05"/>
+  </joint>
+
+  <link name="head_link">
+    <visual>
+      <origin xyz="0 0 0.020" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.040 0.035 0.040"/>
+      </geometry>
+      <material name="body_blue"/>
+    </visual>
+    <!-- camera -->
+    <visual>
+      <origin xyz="0.018 0 0.035" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.025 0.020 0.025"/>
+      </geometry>
+      <material name="camera_dark"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.020" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.040 0.035 0.040"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.030"/>
+      <inertia ixx="5e-6" iyy="5e-6" izz="5e-6" ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+  </link>
+
+  <!-- ═══════════════════════════════════════════════════
+       LEFT ARM
+       Proto anchor: 0.045 0 0.030 (X=left, Z=up)
+       URDF: y=+0.045 (left), z=+0.030
+  ═══════════════════════════════════════════════════ -->
+  <joint name="left_shoulder_pitch" type="revolute">
+    <parent link="base_link"/>
+    <child link="left_upper_arm"/>
+    <origin xyz="0 0.045 0.030" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-1.571" upper="1.571" effort="2.0" velocity="3.14"/>
+    <dynamics damping="0.1" friction="0.05"/>
+  </joint>
+
+  <link name="left_upper_arm">
+    <visual>
+      <origin xyz="0 0 -0.0225" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.015" length="0.045"/>
+      </geometry>
+      <material name="body_blue"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 -0.0225" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.015" length="0.045"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.025"/>
+      <inertia ixx="4e-6" iyy="4e-6" izz="1e-6" ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+  </link>
+
+  <joint name="left_elbow_pitch" type="revolute">
+    <parent link="left_upper_arm"/>
+    <child link="left_forearm"/>
+    <origin xyz="0 0 -0.045" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-2.094" upper="0.0" effort="1.5" velocity="3.14"/>
+    <dynamics damping="0.08" friction="0.05"/>
+  </joint>
+
+  <link name="left_forearm">
+    <visual>
+      <origin xyz="0 0 -0.020" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.012" length="0.040"/>
+      </geometry>
+      <material name="body_blue"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 -0.020" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.012" length="0.040"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.018"/>
+      <inertia ixx="2e-6" iyy="2e-6" izz="8e-7" ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+  </link>
+
+  <joint name="left_wrist_pitch" type="revolute">
+    <parent link="left_forearm"/>
+    <child link="left_hand"/>
+    <origin xyz="0 0 -0.040" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-0.785" upper="0.785" effort="0.8" velocity="3.14"/>
+    <dynamics damping="0.05" friction="0.02"/>
+  </joint>
+
+  <link name="left_hand">
+    <visual>
+      <origin xyz="0 0 -0.0075" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.025 0.020 0.015"/>
+      </geometry>
+      <material name="body_blue"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 -0.0075" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.025 0.020 0.015"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.010"/>
+      <inertia ixx="5e-7" iyy="5e-7" izz="5e-7" ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+  </link>
+
+  <!-- ═══════════════════════════════════════════════════
+       RIGHT ARM
+       Proto anchor: -0.045 0 0.030 (X=right side negative)
+       URDF: y=-0.045 (right)
+  ═══════════════════════════════════════════════════ -->
+  <joint name="right_shoulder_pitch" type="revolute">
+    <parent link="base_link"/>
+    <child link="right_upper_arm"/>
+    <origin xyz="0 -0.045 0.030" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-1.571" upper="1.571" effort="2.0" velocity="3.14"/>
+    <dynamics damping="0.1" friction="0.05"/>
+  </joint>
+
+  <link name="right_upper_arm">
+    <visual>
+      <origin xyz="0 0 -0.0225" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.015" length="0.045"/>
+      </geometry>
+      <material name="body_blue"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 -0.0225" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.015" length="0.045"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.025"/>
+      <inertia ixx="4e-6" iyy="4e-6" izz="1e-6" ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+  </link>
+
+  <joint name="right_elbow_pitch" type="revolute">
+    <parent link="right_upper_arm"/>
+    <child link="right_forearm"/>
+    <origin xyz="0 0 -0.045" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-2.094" upper="0.0" effort="1.5" velocity="3.14"/>
+    <dynamics damping="0.08" friction="0.05"/>
+  </joint>
+
+  <link name="right_forearm">
+    <visual>
+      <origin xyz="0 0 -0.020" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.012" length="0.040"/>
+      </geometry>
+      <material name="body_blue"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 -0.020" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.012" length="0.040"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.018"/>
+      <inertia ixx="2e-6" iyy="2e-6" izz="8e-7" ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+  </link>
+
+  <joint name="right_wrist_pitch" type="revolute">
+    <parent link="right_forearm"/>
+    <child link="right_hand"/>
+    <origin xyz="0 0 -0.040" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-0.785" upper="0.785" effort="0.8" velocity="3.14"/>
+    <dynamics damping="0.05" friction="0.02"/>
+  </joint>
+
+  <link name="right_hand">
+    <visual>
+      <origin xyz="0 0 -0.0075" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.025 0.020 0.015"/>
+      </geometry>
+      <material name="body_blue"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 -0.0075" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.025 0.020 0.015"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.010"/>
+      <inertia ixx="5e-7" iyy="5e-7" izz="5e-7" ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+  </link>
+
+  <!-- ═══════════════════════════════════════════════════
+       LEFT LEG
+       Proto anchor: 0.025 0 -0.045 (X=left, Z=down)
+       URDF: y=+0.025, z=-0.045
+  ═══════════════════════════════════════════════════ -->
+  <joint name="left_hip_yaw" type="revolute">
+    <parent link="base_link"/>
+    <child link="left_hip_yaw_link"/>
+    <origin xyz="0 0.025 -0.045" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-0.524" upper="0.524" effort="2.0" velocity="3.14"/>
+    <dynamics damping="0.1" friction="0.05"/>
+  </joint>
+
+  <link name="left_hip_yaw_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.016" length="0.020"/>
+      </geometry>
+      <material name="servo_silver"/>
+    </visual>
+    <inertial>
+      <mass value="0.015"/>
+      <inertia ixx="1e-6" iyy="1e-6" izz="1e-6" ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+  </link>
+
+  <joint name="left_hip_pitch" type="revolute">
+    <parent link="left_hip_yaw_link"/>
+    <child link="left_thigh"/>
+    <origin xyz="0 0 -0.010" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-1.571" upper="0.785" effort="3.0" velocity="3.14"/>
+    <dynamics damping="0.15" friction="0.05"/>
+  </joint>
+
+  <link name="left_thigh">
+    <visual>
+      <origin xyz="0 0 -0.030" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.015" length="0.060"/>
+      </geometry>
+      <material name="body_blue"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 -0.030" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.015" length="0.060"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.035"/>
+      <inertia ixx="1e-5" iyy="1e-5" izz="2e-6" ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+  </link>
+
+  <joint name="left_knee_pitch" type="revolute">
+    <parent link="left_thigh"/>
+    <child link="left_shin"/>
+    <origin xyz="0 0 -0.060" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="0.0" upper="2.094" effort="3.0" velocity="3.14"/>
+    <dynamics damping="0.15" friction="0.05"/>
+  </joint>
+
+  <link name="left_shin">
+    <visual>
+      <origin xyz="0 0 -0.030" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.013" length="0.060"/>
+      </geometry>
+      <material name="body_blue"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 -0.030" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.013" length="0.060"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.028"/>
+      <inertia ixx="8e-6" iyy="8e-6" izz="1e-6" ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+  </link>
+
+  <joint name="left_ankle_pitch" type="revolute">
+    <parent link="left_shin"/>
+    <child link="left_foot"/>
+    <origin xyz="0 0 -0.060" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-0.785" upper="0.785" effort="2.0" velocity="3.14"/>
+    <dynamics damping="0.1" friction="0.05"/>
+  </joint>
+
+  <link name="left_foot">
+    <visual>
+      <origin xyz="0.010 0 -0.005" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.040 0.025 0.010"/>
+      </geometry>
+      <material name="body_blue"/>
+    </visual>
+    <collision>
+      <origin xyz="0.010 0 -0.005" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.040 0.025 0.010"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.015"/>
+      <inertia ixx="1e-6" iyy="2e-6" izz="2e-6" ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+  </link>
+
+  <!-- ═══════════════════════════════════════════════════
+       RIGHT LEG
+       Proto anchor: -0.025 0 -0.045
+       URDF: y=-0.025, z=-0.045
+  ═══════════════════════════════════════════════════ -->
+  <joint name="right_hip_yaw" type="revolute">
+    <parent link="base_link"/>
+    <child link="right_hip_yaw_link"/>
+    <origin xyz="0 -0.025 -0.045" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-0.524" upper="0.524" effort="2.0" velocity="3.14"/>
+    <dynamics damping="0.1" friction="0.05"/>
+  </joint>
+
+  <link name="right_hip_yaw_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.016" length="0.020"/>
+      </geometry>
+      <material name="servo_silver"/>
+    </visual>
+    <inertial>
+      <mass value="0.015"/>
+      <inertia ixx="1e-6" iyy="1e-6" izz="1e-6" ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+  </link>
+
+  <joint name="right_hip_pitch" type="revolute">
+    <parent link="right_hip_yaw_link"/>
+    <child link="right_thigh"/>
+    <origin xyz="0 0 -0.010" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-1.571" upper="0.785" effort="3.0" velocity="3.14"/>
+    <dynamics damping="0.15" friction="0.05"/>
+  </joint>
+
+  <link name="right_thigh">
+    <visual>
+      <origin xyz="0 0 -0.030" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.015" length="0.060"/>
+      </geometry>
+      <material name="body_blue"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 -0.030" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.015" length="0.060"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.035"/>
+      <inertia ixx="1e-5" iyy="1e-5" izz="2e-6" ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+  </link>
+
+  <joint name="right_knee_pitch" type="revolute">
+    <parent link="right_thigh"/>
+    <child link="right_shin"/>
+    <origin xyz="0 0 -0.060" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="0.0" upper="2.094" effort="3.0" velocity="3.14"/>
+    <dynamics damping="0.15" friction="0.05"/>
+  </joint>
+
+  <link name="right_shin">
+    <visual>
+      <origin xyz="0 0 -0.030" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.013" length="0.060"/>
+      </geometry>
+      <material name="body_blue"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 -0.030" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.013" length="0.060"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.028"/>
+      <inertia ixx="8e-6" iyy="8e-6" izz="1e-6" ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+  </link>
+
+  <joint name="right_ankle_pitch" type="revolute">
+    <parent link="right_shin"/>
+    <child link="right_foot"/>
+    <origin xyz="0 0 -0.060" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-0.785" upper="0.785" effort="2.0" velocity="3.14"/>
+    <dynamics damping="0.1" friction="0.05"/>
+  </joint>
+
+  <link name="right_foot">
+    <visual>
+      <origin xyz="0.010 0 -0.005" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.040 0.025 0.010"/>
+      </geometry>
+      <material name="body_blue"/>
+    </visual>
+    <collision>
+      <origin xyz="0.010 0 -0.005" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.040 0.025 0.010"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.015"/>
+      <inertia ixx="1e-6" iyy="2e-6" izz="2e-6" ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+  </link>
+
+</robot>
